@@ -1,0 +1,47 @@
+enum ExerciseGroup {
+    BACK,
+    CHEST,
+    BICEP,
+    TRICEP,
+    SHOULDER,
+    LEGS,
+    ABS
+}
+
+class Exercise {
+    id: number;
+    name: string;
+    group: ExerciseGroup;
+}
+
+class WorkoutExercise {
+    id: number; foreign key to exercise
+    weight: number;
+    reps: number;
+}
+
+class Workout {
+    id: number;
+    date: Date;
+    exercises: WorkoutExercise[]
+}
+
+// View API
+class WorkoutView {
+    id: number;
+    date: Date;
+    exercises: WorkoutExerciseView[];
+}
+
+class ExerciseView {
+    id: number;
+    name: string;
+    group: ExerciseGroup;
+}
+
+class WorkoutExerciseView {
+    id: number;
+    exercise: ExerciseView;
+    weight: number;
+    reps: number;
+}
