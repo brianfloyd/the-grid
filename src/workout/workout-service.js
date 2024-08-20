@@ -1,12 +1,43 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
-import {convertDateToYYYYMMDD, isValidDateString} from "../utils.js";
+import {convertDateToYYYYMMDD, isValidDateString, transactional} from "../utils.js";
 import {Workout} from "../model/api/workout.js";
 import {WorkoutSet} from "../model/api/workout-set.js";
 
 export class WorkoutService {
 
-    constructor() {
+    databaseClientFactory;
+    workoutDao;
 
+    constructor(databaseClientFactory, workoutDao) {
+        if (!workoutDao) {
+            throw new Error('Workout dao was not provided.');
+        }
+
+        if (!databaseClientFactory) {
+            throw new Error('Database client factory was not provided.');
+        }
+
+        this.databaseClientFactory = databaseClientFactory;
+        this.workoutDao = workoutDao;
+    }
+
+    async getWorkoutFromDatabaseDate(dateStr) {
+        try {
+            const client = await this.databaseClientFactory.obtain();
+            // TODO: Test to make sure transactional is working properly.
+            await transactional(client, async () => {
+                const data = await this.workoutDao.getWorkoutForDate(client, dateStr);
+                console.log(data);
+                return data;
+            })
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
+
+            console.error("An unexpected error occurred while getting workout for date.", e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        }
     }
 
     async getWorkoutForDate(dateString) {

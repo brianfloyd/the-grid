@@ -1,5 +1,9 @@
 import fs from 'fs';
 import { setupServer } from './server/server.js';
+import {DatabaseClientFactory} from "./config/database-client-factory.js";
+import {GlobalErrorHandler} from "./server/global-error-handler.js";
+import {configureExerciseObjects} from "./config/exercise-config.js";
+import {configureWorkoutObjects} from "./config/workout-config.js";
 
 const env = process.env.NODE_ENV || 'test';
 const configPath = `./config/${env}.json`;
@@ -17,7 +21,25 @@ process.env = {
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL || 'NO_DATABASE_URL';
 
+// Configure and wire up services.
+const dbClientFactory = new DatabaseClientFactory(DATABASE_URL);
+
+const {
+    exerciseService,
+    exerciseViewResource
+} = configureExerciseObjects(dbClientFactory);
+
+const {
+    workoutService,
+    workoutViewResource
+} = configureWorkoutObjects(dbClientFactory, exerciseService);
+
+// Server Configuration.
 const server = setupServer();
+workoutViewResource.bind(server);
+exerciseViewResource.bind(server);
+new GlobalErrorHandler().bind(server);
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

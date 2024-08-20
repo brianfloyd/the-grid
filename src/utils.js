@@ -19,3 +19,17 @@ export function convertDateToYYYYMMDD(date) {
     const pDay          = day.toString().padStart(2,"0");
     return `${year}/${pMonth}/${pDay}`;
 }
+
+export async function transactional(client, callback) {
+    try {
+        await client.query('BEGIN');
+        const result = callback();
+        await client.query('COMMIT');
+        return result;
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+}

@@ -12,8 +12,8 @@ export const ErrorCode = Object.freeze({
 
 export class ServerError extends Error {
     statusCode; // number
-    errorCode;         // string
-    reason;       // string
+    errorCode;  // string
+    reason;     // string
 
     /**
      *  errorCode: ErrorCode;

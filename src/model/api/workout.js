@@ -1,6 +1,6 @@
 
 export class Workout {
-    id;     // number
-    date;   // Date;
-    sets;   //  WorkoutSet[]
+    id;       // number
+    date;     // Date;
+    sets;     // WorkoutSet[]
 }
