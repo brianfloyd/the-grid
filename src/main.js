@@ -5,6 +5,7 @@ import {GlobalErrorHandler} from "./server/global-error-handler.js";
 import {configureExerciseObjects} from "./config/exercise-config.js";
 import {configureWorkoutObjects} from "./config/workout-config.js";
 import {_200} from "./server/server-utils.js";
+import {configureSetObjets} from "./config/set-config.js";
 
 const env = process.env.NODE_ENV || 'test';
 const configPath = `./app-config/${env}.json`;
@@ -31,9 +32,13 @@ const {
 } = configureExerciseObjects(dbClientFactory);
 
 const {
-    workoutService,
+    setService
+} = configureSetObjets(dbClientFactory);
+
+const {
     workoutViewResource
-} = configureWorkoutObjects(dbClientFactory, exerciseService);
+} = configureWorkoutObjects(dbClientFactory, exerciseService, setService);
+
 
 // Server Configuration.
 const server = setupServer();

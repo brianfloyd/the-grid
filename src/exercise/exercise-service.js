@@ -1,22 +1,7 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
 import {ExerciseGroup} from "../model/api/exercise-group.js";
-import {transactional} from "../utils.js";
 
 export class ExerciseService {
-
-    // Hardcoded exercises...for now!
-    static EXERCISES = {
-        1: {
-            id: 1,
-            group: ExerciseGroup.BICEP.name,
-            name: 'Bicep Curls'
-        },
-        2: {
-            id: 2,
-            group: ExerciseGroup.TRICEP.name,
-            name: 'Tricep Extensions'
-        }
-    }
 
     dbClientFactory;
     exerciseDao;
@@ -38,17 +23,18 @@ export class ExerciseService {
         return Object.values(ExerciseGroup).sort((a, b) => a.order - b.order);
     }
 
-    async getAllExercisesForGroup(groupName) {
+    async getAllExercisesForGroup(groupName, client) {
         try {
             const groupNames = Object.values(ExerciseGroup).map(eg => eg.name);
             if (!groupNames.includes(groupName)) {
                 throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided group name is not valid.');
             }
 
-            const client = await this.dbClientFactory.obtain();
-            return await transactional(client, async () => {
-                return await this.exerciseDao.getAllExercisesForGroup(client, groupName);
-            });
+            if (!client) {
+                client = await this.dbClientFactory.obtain();
+            }
+
+            return await this.exerciseDao.getAllExercisesForGroup(client, groupName);
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -59,22 +45,26 @@ export class ExerciseService {
         }
     }
 
-    // TODO: Remove me.
-    async getExercisesByIds(ids) {
+    async getExercisesByIds(ids, client) {
         try {
             if (!ids || !Array.isArray(ids)) {
                 return {};
             }
-            const uniqueIds = new Set(ids);
 
-            const exercisesByIds = {};
-            for (const id of uniqueIds) {
-                const exercise = ExerciseService.EXERCISES[id];
-                if (exercise) {
-                    exercisesByIds[id] = exercise;
-                }
+            const uniqueIds = Array.from(new Set(ids));
+            if (uniqueIds.length === 0) {
+                return {};
             }
 
+            if (!client) {
+                client = await this.dbClientFactory.obtain();
+            }
+
+            const exercisesByIds = {};
+            const exercises = await this.exerciseDao.getExercisesForIds(client, uniqueIds);
+            for (const exercise of exercises) {
+                exercisesByIds[exercise.id] = exercise;
+            }
             return exercisesByIds;
         } catch (e) {
             if (e instanceof ServerError) {

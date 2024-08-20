@@ -28,9 +28,11 @@ export class WorkoutDisplayService {
      */
     async getWorkoutViewForDate(dateString) {
         try {
-            const workout = await this.workoutService.getWorkoutForDate(dateString);
+            // TODO: Switch to passing the date when the front end is ready for it.
+            const workout = await this.workoutService.getWorkoutForDate('2024-08-19');
 
             let workoutView = new WorkoutView(workout);
+            workoutView.date = dateString;
             workoutView = await this.populateSets(workoutView, workout);
             return workoutView;
         } catch (e) {

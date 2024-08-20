@@ -1,3 +1,4 @@
+import {ErrorCode, ServerError} from "../server/server-error.js";
 
 export class SetService {
 
@@ -18,8 +19,20 @@ export class SetService {
         this.setDao = setDao;
     }
 
-    async getSetsForWorkout(workoutId) {
+    async getSetsForWorkout(workoutId, client) {
+        try {
+            if (!client) {
+                client = await this.databaseClientFactory.obtain();
+            }
+            return await this.setDao.getSetsForWorkout(client, workoutId);
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
 
+            console.error('An error occurred while getting sets for workout.', e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        }
     }
 
 }
