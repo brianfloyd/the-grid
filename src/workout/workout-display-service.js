@@ -1,28 +1,38 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
-import {convertDateToYYYYMMDD, isValidDateString} from "../utils.js";
+import {WorkoutView} from "../model/view/workout-view.js";
+import {SetView} from "../model/view/set-view.js";
 
 /**
  * Orchestration layer that converts workout information into a display ready format.
  */
 export class WorkoutDisplayService {
 
-    constructor() {}
+    workoutService;
+    exerciseService
+
+    constructor(workoutService, exerciseService) {
+        if (!workoutService) {
+            throw new Error('Workout service was not provided.');
+        }
+
+        if (!exerciseService) {
+            throw new Error('Exercise service was not provided.');
+        }
+
+        this.workoutService = workoutService;
+        this.exerciseService = exerciseService;
+    }
 
     /**
      * Gets a workout for a given date.
      */
-    getWorkoutViewForDate(dateString) {
+    async getWorkoutViewForDate(dateString) {
         try {
-            if (!dateString) {
-                throw new ServerError(ErrorCode.INVALID_REQUEST, 'Date was not provided.');
-            }
+            const workout = await this.workoutService.getWorkoutForDate(dateString);
 
-            if (!isValidDateString(dateString)) {
-                throw new ServerError(ErrorCode.INVALID_REQUEST, 'Provided string is not a valid date.');
-            }
-
-            const dateKey = convertDateToYYYYMMDD(new Date(Date.parse(dateString)));
-            return this.generateFakeResponse(dateKey);
+            let workoutView = new WorkoutView(workout);
+            workoutView = await this.populateSets(workoutView, workout);
+            return workoutView;
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -33,44 +43,33 @@ export class WorkoutDisplayService {
         }
     }
 
-    generateFakeResponse(dateKey) {
-        return {
-            id: 1,
-            date: dateKey,
-            sets: [
-                {
-                    id: 1,
-                    exerciseId: 1,
-                    group: 'BICEP',
-                    name: 'Bicep Curls',
-                    weight: 30,
-                    reps: 10
-                },
-                {
-                    id: 2,
-                    exerciseId: 1,
-                    group: 'BICEP',
-                    name: 'Bicep Curls',
-                    weight: 20,
-                    reps: 10
-                },
-                {
-                    id: 3,
-                    exerciseId: 2,
-                    group: 'TRICEP',
-                    name: 'Tricep Extensions',
-                    weight: 20,
-                    reps: 10
-                },
-                {
-                    id: 4,
-                    exerciseId: 2,
-                    group: 'TRICEP',
-                    name: 'Tricep Extensions',
-                    weight: 10,
-                    reps: 15
-                }
-            ]
+    async populateSets(workoutView, workout) {
+        let setViews = [];
+        for (const set of workout.sets) {
+            const setView = new SetView(set);
+            setViews.push(setView);
         }
+        setViews = await this.populateExercises(setViews);
+
+        workoutView.sets = setViews;
+        return workoutView;
+    }
+
+    async populateExercises(setViews) {
+        const exerciseIds = setViews.map(sv => sv.exerciseId);
+
+        const exercisesByIds = await this.exerciseService.getExercisesByIds(exerciseIds);
+        for (const setView of setViews) {
+            const exercise = exercisesByIds[setView.exerciseId];
+            if (exercise) {
+                setView.name = exercise.name;
+                setView.group = exercise.group;
+            } else {
+                setView.name = 'NA';
+                setView.group = 'NA';
+            }
+        }
+
+        return setViews;
     }
 }

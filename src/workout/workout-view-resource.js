@@ -22,8 +22,8 @@ export class WorkoutViewResource {
      *
      * Path: /workout/view/date/:date
      */
-    getWorkoutViewForDate(request, response) {
-        const workoutView = this.workoutDisplayService.getWorkoutViewForDate(request.params.date);
+    async getWorkoutViewForDate(request, response) {
+        const workoutView = await this.workoutDisplayService.getWorkoutViewForDate(request.params.date);
         return _200(response, workoutView);
     }
 

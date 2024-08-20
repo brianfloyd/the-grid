@@ -9,6 +9,8 @@ import {WorkoutDisplayService} from "./workout/workout-display-service.js";
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
 import {GlobalErrorHandler} from "./server/global-error-handler.js";
+import {WorkoutService} from "./workout/workout-service.js";
+import {ExerciseService} from "./exercise/exercise-service.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -18,13 +20,16 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 
-const workoutDisplayService = new WorkoutDisplayService();
-const workoutResource = new WorkoutViewResource(workoutDisplayService);
+const workoutService = new WorkoutService();
+const exerciseService = new ExerciseService();
+
+const workoutDisplayService = new WorkoutDisplayService(workoutService, exerciseService);
+const workoutViewResource = new WorkoutViewResource(workoutDisplayService);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
-workoutResource.bind(app);
+workoutViewResource.bind(app);
 app.use(GlobalErrorHandler.handle);
 
 app.listen(PORT, '0.0.0.0', () => {

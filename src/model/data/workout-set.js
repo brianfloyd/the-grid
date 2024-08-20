@@ -1,5 +1,6 @@
 export class WorkoutSet {
-    id;     // number
-    weight; // number
-    reps;   // number
+    id;         // number
+    exerciseId; // number
+    weight;     // number
+    reps;       // number
 }
