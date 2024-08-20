@@ -15,14 +15,14 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 
 const workoutDisplayService = new WorkoutDisplayService();
 const workoutResource = new WorkoutViewResource(workoutDisplayService);
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 workoutResource.bind(app);
 app.use(GlobalErrorHandler.handle);
