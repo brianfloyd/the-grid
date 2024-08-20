@@ -23,7 +23,7 @@ export function convertDateToYYYYMMDD(date) {
 export async function transactional(client, callback) {
     try {
         await client.query('BEGIN');
-        const result = callback();
+        const result = await callback();
         await client.query('COMMIT');
         return result;
     } catch (e) {

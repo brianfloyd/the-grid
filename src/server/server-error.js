@@ -4,6 +4,10 @@ export const ErrorCode = Object.freeze({
         statusCode: 400,
         name: 'INVALID_REQUEST'
     },
+    NOT_FOUND: {
+        statusCode: 404,
+        name: 'NOT_FOUND'
+    },
     GENERIC_ERROR: {
         responseCode: 500,
         name: 'GENERIC_ERROR'

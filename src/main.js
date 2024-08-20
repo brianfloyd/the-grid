@@ -4,6 +4,7 @@ import {DatabaseClientFactory} from "./config/database-client-factory.js";
 import {GlobalErrorHandler} from "./server/global-error-handler.js";
 import {configureExerciseObjects} from "./config/exercise-config.js";
 import {configureWorkoutObjects} from "./config/workout-config.js";
+import {_200} from "./server/server-utils.js";
 
 const env = process.env.NODE_ENV || 'test';
 const configPath = `./app-config/${env}.json`;

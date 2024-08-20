@@ -8,7 +8,7 @@ export class WorkoutViewResource {
     static URL_PREFIX = '/workout/view';
 
     workoutDisplayService;
-    
+
     constructor(workoutDisplayService) {
         if (!workoutDisplayService) {
             throw new Error('Workout display service was not provided.');

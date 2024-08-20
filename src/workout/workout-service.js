@@ -24,12 +24,13 @@ export class WorkoutService {
     async getWorkoutFromDatabaseDate(dateStr) {
         try {
             const client = await this.databaseClientFactory.obtain();
-            // TODO: Test to make sure transactional is working properly.
-            await transactional(client, async () => {
+            return await transactional(client, async () => {
                 const data = await this.workoutDao.getWorkoutForDate(client, dateStr);
-                console.log(data);
+                if (!data || data.length === 0) {
+                    throw new ServerError(ErrorCode.NOT_FOUND, 'No workouts found for the specified date.');
+                }
                 return data;
-            })
+            });
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
