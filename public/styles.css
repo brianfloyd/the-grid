@@ -63,14 +63,7 @@ td {
     padding: 0;
 }
 
-.icon-placeholder {
-    width: 40px; /* Adjust size as needed */
-    height: 40px; /* Adjust size as needed */
-    background-color: white; /* Placeholder color */
-    border-radius: 50%;
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
+
 
 
     h1 {
@@ -232,30 +225,35 @@ td {
     tr td:first-child {
         width: 150px; /* Set the desired width */
     }
+   
     .grid-icons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px; /* space between the icons */
-        justify-content: space-evenly;
-        margin-bottom:5%;
-    }
-    
-    .grid-icons i {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+        gap: 20px; /* space between the icons */
+        justify-items: center;
         align-items: center;
-        justify-content: center;
-        background-color: white;
-        color: black;
-        border-radius: 50%;
-        width: 3em; /* sets the width of the circle */
-        height: 3em; /* sets the height of the circle */
-        font-size: 1.5em; /* makes the text 1.5 times bigger */
-        transition: transform 0.3s ease;
+        width: 100%;
+        padding: 20px 0;
+        box-sizing: border-box;
     }
-    
-    .grid-icons i:hover {
-        transform: scale(1.1); /* slightly enlarges the icon on hover */
-    }
-    
+
+.grid-icons i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1E90FF; /* Example background color */
+    border-radius: 50%;
+    width: 60px; /* Set a fixed width for the circle */
+    height: 60px; /* Set a fixed height for the circle */
+}
+
+.grid-icons img {
+    width: 80%; /* Resize the image to fit within the circle */
+    height: auto;
+    display: block;
+}
+.highlighted{
+    background-color: yellow !important;
+}
 
 }

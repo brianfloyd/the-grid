@@ -4,7 +4,9 @@ class DOMSETUP {
 
 constructor(){
   this.getData= async (api,param) => {
-    param = param.replace(/\//g, '-');
+   
+    if(param===null)param="";
+    else{ param = param.replace(/\//g, '-');}
     try {
                 const response = await fetch(`${api}${param}`);
                 if (!response.ok) {
@@ -20,18 +22,25 @@ constructor(){
 
 }
 createGrid(){
-    this.getData(``).then(group=>{
-    const icondiv =  this.createElement('div','icon-set',['grid-icons']);
-    icondiv.append(this.createElement('i',`icon-${excercise.group}`));
+    const root =  document.getElementById('root');
+    const icondiv =  this.createElement('div',null,['grid-icons']);
+    this.getData(`/exercise/view/groups/all`,null).then(groups=>{
+    for (let muscleGroup of groups){
+        console.log(muscleGroup)
+   
+    icondiv.append(this.createElement('i',`icon-${muscleGroup.name.toLowerCase()}`));
+    root.append(icondiv);
     let img = this.createElement('img');
-    img.src=
-    document.getElementById(`icon-${excercise.group}`).appendChild(img)
+    img.src=muscleGroup.image.toLowerCase();
+    document.getElementById(`icon-${muscleGroup.name.toLowerCase()}`).appendChild(img)
+
+    }
+   
     })
 
+
     this.getData(`/workout/view/date/`,this.getToday()).then(excerciseData=>{
-    const root =  document.getElementById('root');
-   
-    root.append(icondiv);
+ 
         for (let excercise of excerciseData.sets ){
             if(!document.getElementById(`table-${excercise.group}`)){
             
@@ -39,6 +48,7 @@ createGrid(){
                 const table=this.createElement('table');
                 const tablebody=this.createElement('tbody');
                 tablebody.id=`table-${excercise.group}`;
+                document.getElementById(`icon-${excercise.group.toLowerCase()}`).classList.add('highlighted')
                 table.append(tablebody);
                 obj.append(table);
                 obj.classList.add('the-grid');
