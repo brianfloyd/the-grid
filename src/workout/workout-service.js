@@ -1,7 +1,7 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
 import {convertDateToYYYYMMDD, isValidDateString} from "../utils.js";
-import {Workout} from "../model/data/workout.js";
-import {WorkoutSet} from "../model/data/workout-set.js";
+import {Workout} from "../model/api/workout.js";
+import {WorkoutSet} from "../model/api/workout-set.js";
 
 export class WorkoutService {
 

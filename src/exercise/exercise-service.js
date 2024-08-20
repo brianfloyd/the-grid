@@ -1,4 +1,5 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
+import {ExerciseGroup} from "../model/api/exercise-group.js";
 
 export class ExerciseService {
 
@@ -6,18 +7,22 @@ export class ExerciseService {
     static EXERCISES = {
         1: {
             id: 1,
-            group: 'BICEP',
+            group: ExerciseGroup.BICEP.name,
             name: 'Bicep Curls'
         },
         2: {
             id: 2,
-            group: 'TRICEP',
+            group: ExerciseGroup.TRICEP.name,
             name: 'Tricep Extensions'
         }
     }
 
     constructor() {
 
+    }
+
+    async getAllExerciseGroups() {
+        return Object.values(ExerciseGroup).sort((a, b) => a.order - b.order);
     }
 
     async getExercisesByIds(ids) {

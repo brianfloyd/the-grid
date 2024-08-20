@@ -456,7 +456,7 @@ start.createGrid()
 //             let tablebody=document.createElement('tbody');
 //             tablebody.id=`table-${muscleGroup}`;
 //             table.append(tablebody);
-//             icon.setAttribute('src',`images/${muscleGroup}.webp`);
+//             icon.setAttribute('src',`images/${muscleGroup}.png`);
 //             icon.classList.add('icon-placeholder');
 //             obj.append(icon);
 //             obj.append(table)
@@ -492,4 +492,3 @@ start.createGrid()
 
 // }
 // fetchExerciseData().then(data=>init(data))
-
