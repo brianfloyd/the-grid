@@ -6,7 +6,7 @@ import {configureExerciseObjects} from "./config/exercise-config.js";
 import {configureWorkoutObjects} from "./config/workout-config.js";
 
 const env = process.env.NODE_ENV || 'test';
-const configPath = `./config/${env}.json`;
+const configPath = `./app-config/${env}.json`;
 
 let config = {}
 if (fs.existsSync(configPath)) {
