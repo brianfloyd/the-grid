@@ -59,7 +59,7 @@ class SetView {
             id: 2,
             exerciseId: 1,
             group: 'BICEP',
-            name: 'Bicep Curls'
+            name: 'Bicep Curls',
             weight: 20,
             reps: 10
         },
