@@ -3,10 +3,10 @@
 class DOMSETUP {
 
 constructor(){
-  this.workout= async (date) => {
-    date = date.replace(/\//g, '-');
+  this.getData= async (api,param) => {
+    param = param.replace(/\//g, '-');
     try {
-                const response = await fetch(`/workout/view/date/${date}`);
+                const response = await fetch(`${api}${param}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -17,17 +17,24 @@ constructor(){
             }
     
   }
+
 }
 createGrid(){
-
-    this.workout(this.getToday()).then(excerciseData=>{
-    const root =  document.getElementById('root');
+    this.getData(``).then(group=>{
     const icondiv =  this.createElement('div','icon-set',['grid-icons']);
+    icondiv.append(this.createElement('i',`icon-${excercise.group}`));
+    let img = this.createElement('img');
+    img.src=
+    document.getElementById(`icon-${excercise.group}`).appendChild(img)
+    })
+
+    this.getData(`/workout/view/date/`,this.getToday()).then(excerciseData=>{
+    const root =  document.getElementById('root');
+   
     root.append(icondiv);
         for (let excercise of excerciseData.sets ){
             if(!document.getElementById(`table-${excercise.group}`)){
-                icondiv.append(this.createElement('i',`icon-${excercise.group}`));
-                document.getElementById(`icon-${excercise.group}`).textContent=excercise.group.charAt(0);
+            
                 const obj =this.createElement('div');
                 const table=this.createElement('table');
                 const tablebody=this.createElement('tbody');
