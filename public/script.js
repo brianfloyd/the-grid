@@ -3,55 +3,28 @@
 class DOMSETUP {
 
 constructor(){
-  this.workout={
-        id: 1,
-        date: '2024/08/15',
-        sets: [
-            {
-                id: 1,
-                exerciseId: 1,
-                group: 'BICEP',
-                name: 'Bicep Curls',
-                weight: 30,
-                reps: 10
-            },
-            {
-                id: 2,
-                exerciseId: 1,
-                group: 'BICEP',
-                name: 'Bicep Curls',
-                weight: 20,
-                reps: 10
-            },
-            {
-                id: 3,
-                exerciseId: 2,
-                group: 'TRICEP',
-                name: 'Tricep Extensions',
-                weight: 20,
-                reps: 10
-            },
-            {
-                id: 4,
-                exerciseId: 2,
-                group: 'TRICEP',
-                name: 'Tricep Extensions',
-                weight: 10,
-                reps: 15
+  this.workout= async (date) => {
+    date = date.replace(/\//g, '-');
+    try {
+                const response = await fetch(`/workout/view/date/${date}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
             }
-        ]
-    }
-
+    
+  }
 }
-
-
-
-
 createGrid(){
+
+    this.workout(this.getToday()).then(excerciseData=>{
     const root =  document.getElementById('root');
     const icondiv =  this.createElement('div','icon-set',['grid-icons']);
     root.append(icondiv);
-        for (let excercise of this.workout.sets ){
+        for (let excercise of excerciseData.sets ){
             if(!document.getElementById(`table-${excercise.group}`)){
                 icondiv.append(this.createElement('i',`icon-${excercise.group}`));
                 document.getElementById(`icon-${excercise.group}`).textContent=excercise.group.charAt(0);
@@ -63,12 +36,9 @@ createGrid(){
                 obj.append(table);
                 obj.classList.add('the-grid');
                 const grid = document.getElementById('the-grid');
-              
-     
-               
                 root.append(obj);
             }
-                const tb = document.getElementById(`table-${excercise.group}`)
+                const tb = document.getElementById(`table-${excercise.group}`);
                 const row = tb.insertRow();
                 const excerciseCell = row.insertCell(0);
                 const weightCell = row.insertCell(1);
@@ -76,21 +46,53 @@ createGrid(){
                 const nextCell = row.insertCell(3);
                 const count = row.insertCell(4);
                 count.classList.add('hide-count');
-                //count.setAttribute('onclick', 'decrementExcercise(this)');
+                count.setAttribute('onclick', 'start.decrementExcercise(this)');
                 excerciseCell.textContent = excercise.name || '';
                 weightCell.classList.add('data-cell','updatable');
                 repsCell.classList.add('data-cell','updatable');
-                weightCell.setAttribute('onclick', 'makeEditable(this)');
-                repsCell.setAttribute('onclick', 'makeEditable(this)');
+                weightCell.setAttribute('onclick', 'start.makeEditable(this)');
+                repsCell.setAttribute('onclick', 'start.makeEditable(this)');
                 weightCell.textContent = excercise.weight;
                 repsCell.textContent = excercise.reps;
-                nextCell.innerHTML='<td class="button-cell"><button class="add-btn" onclick="incrementExcercise(this)">+</button></td>';
+                nextCell.innerHTML='<td class="button-cell"><button class="add-btn" onclick="start.incrementExcercise(this)">+</button></td>';
+        }
+    })
+}
+incrementExcercise(element){
+          
+              let excercise=element.parentElement.parentElement.childNodes[0].innerText;
+              let weight=element.parentElement.parentElement.childNodes[1].innerText;
+              let reps=element.parentElement.parentElement.childNodes[2].innerText;
+              
+              let incrementColumn = element.parentElement.nextSibling;
+              incrementColumn.classList.remove('hide-count');
+              let currentValue = incrementColumn.textContent;
+              if (currentValue =>1)currentValue++;
+              if (currentValue==='')currentValue=1;
+              incrementColumn.textContent=currentValue;
+           
+     }
+    decrementExcercise(element){
+        console.log(element)
+        let excercise = element.parentElement.childNodes[0].innerText;
+        let incrementColumn = element;
+        let currentValue = incrementColumn.textContent;
+            if (currentValue =>1)currentValue = currentValue -1
+            if (currentValue==='' || currentValue ===0){
+                currentValue='';
+                element.classList.add('hide-count')
+            }
+        incrementColumn.textContent=currentValue;
+    };
+    makeEditable(td) {
+            const originalValue = td.innerText;
+            td.innerHTML = `<input type='text' value='${originalValue}' onblur='start.saveValue(this)' onkeydown='start.handleKey(event, this)' />`;
+            const input = td.querySelector('input');
+            input.focus();
+            input.select();
         }
 
-}
-
 createElement(kind,id,classList){
-    console.log(kind,id)
     const doc = document.createElement(kind);
     if(id)doc.id=id;
     if(Array.isArray(classList)){
@@ -100,23 +102,36 @@ createElement(kind,id,classList){
     }
     return doc;
 }
+saveValue(input) {
+    console.log(input)
+    const newValue = input.value;
+    const td = input;
+    td.innerHTML = newValue;
+    td.onclick = function() { start.makeEditable(td); };
+}
+
+handleKey(event, input) {
+    if (event.key === 'Enter') {
+        this.saveValue(input);
+    } else if (event.key === 'Escape') {
+        const td = input.parentElement;
+        td.innerHTML = input.value;
+        td.onclick = function() { start.makeEditable(td); };
+    }
+}
 getToday(){
         const date = new Date();
         let year = date.getFullYear();
         let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based, so add 1
         let day = date.getDate().toString().padStart(2, '0');
-    
         return `${year}/${month}/${day}`;
-    
-
-  
 }
 
 
 }
 
 
-let start = new DOMSETUP();
+const start = new DOMSETUP();
 
 start.createGrid()
 

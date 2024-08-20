@@ -237,6 +237,7 @@ td {
         flex-wrap: wrap;
         gap: 10px; /* space between the icons */
         justify-content: space-evenly;
+        margin-bottom:5%;
     }
     
     .grid-icons i {
