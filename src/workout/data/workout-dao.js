@@ -1,5 +1,4 @@
 import {WorkoutData} from "./workout-data.js";
-import {convertDateToYYYYMMDD} from "../../utils.js";
 
 export class WorkoutDao {
 
@@ -18,7 +17,7 @@ class WorkoutDataRowMapper {
         for (const row of result.rows) {
             const workoutData = new WorkoutData();
             workoutData.id = Number(row['wrk_id']);
-            workoutData.date = convertDateToYYYYMMDD(row['wrk_date']);
+            workoutData.date = row['wrk_date'];
             data.push(workoutData);
         }
         return data;

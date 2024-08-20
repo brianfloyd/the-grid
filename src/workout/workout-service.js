@@ -1,5 +1,6 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
 import {convertDateToYYYYMMDD, isValidDateString} from "../utils.js";
+import {Workout} from "../model/api/workout.js";
 
 export class WorkoutService {
 
@@ -46,8 +47,8 @@ export class WorkoutService {
                 throw new ServerError(ErrorCode.NOT_FOUND, 'No workouts found for the specified date.');
             }
 
-            const workout = data[0];
-            return await this.convertToApi(workout, client);
+            const workoutData = data[0];
+            return await this.convertToApi(workoutData, client);
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -58,7 +59,10 @@ export class WorkoutService {
         }
     }
 
-    async convertToApi(workout, client) {
+    async convertToApi(workoutData, client) {
+        const workout = new Workout();
+        workout.id = workoutData.id;
+        workout.date = convertDateToYYYYMMDD(workoutData.date);
         workout.sets = await this.setService.getSetsForWorkout(workout.id, client);
         return workout;
     }
