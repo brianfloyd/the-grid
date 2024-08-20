@@ -18,7 +18,7 @@ export class ExerciseViewResource {
     /**
      * Gets a workout for a given date passed in the url parameter.
      *
-     * Path: /exercise/groups/all
+     * Path: /exercise/view/groups/all
      */
     async getAllExerciseGroups(request, response) {
         const workoutView = await this.exerciseService.getAllExerciseGroups();
