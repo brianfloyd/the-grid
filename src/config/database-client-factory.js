@@ -7,8 +7,10 @@ export class DatabaseClientFactory {
 
     constructor(connectionString) {
         this.pool = new Pool({
+            max: 2,
             connectionString: connectionString,
-            connectionTimeoutMillis: 5000
+            connectionTimeoutMillis: 5000,
+            idleTimeoutMillis: 0
         });
     }
 

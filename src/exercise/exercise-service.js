@@ -24,6 +24,7 @@ export class ExerciseService {
     }
 
     async getAllExercisesForGroup(groupName, client) {
+        let dbClient = client;
         try {
             const groupNames = Object.values(ExerciseGroup).map(eg => eg.name);
             if (!groupNames.includes(groupName)) {
@@ -31,10 +32,10 @@ export class ExerciseService {
             }
 
             if (!client) {
-                client = await this.dbClientFactory.obtain();
+                dbClient = await this.dbClientFactory.obtain();
             }
 
-            return await this.exerciseDao.getAllExercisesForGroup(client, groupName);
+            return await this.exerciseDao.getAllExercisesForGroup(dbClient, groupName);
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -42,10 +43,15 @@ export class ExerciseService {
 
             console.error('An error occurred while getting all exercises for a given group.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+           if (!client)  {
+               dbClient.release();
+           }
         }
     }
 
     async getExercisesByIds(ids, client) {
+        let dbClient = client;
         try {
             if (!ids || !Array.isArray(ids)) {
                 return {};
@@ -57,11 +63,11 @@ export class ExerciseService {
             }
 
             if (!client) {
-                client = await this.dbClientFactory.obtain();
+                dbClient = await this.dbClientFactory.obtain();
             }
 
             const exercisesByIds = {};
-            const exercises = await this.exerciseDao.getExercisesForIds(client, uniqueIds);
+            const exercises = await this.exerciseDao.getExercisesForIds(dbClient, uniqueIds);
             for (const exercise of exercises) {
                 exercisesByIds[exercise.id] = exercise;
             }
@@ -73,6 +79,10 @@ export class ExerciseService {
 
             console.error('An error occurred while getting exercises by ids.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client) {
+                dbClient.release();
+            }
         }
     }
 }

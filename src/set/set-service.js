@@ -1,4 +1,5 @@
 import {ErrorCode, ServerError} from "../server/server-error.js";
+import {transactional} from "../utils.js";
 
 export class SetService {
 
@@ -20,11 +21,12 @@ export class SetService {
     }
 
     async getSetsForWorkout(workoutId, client) {
+        let dbClient = client;
         try {
             if (!client) {
-                client = await this.databaseClientFactory.obtain();
+                dbClient = await this.databaseClientFactory.obtain();
             }
-            return await this.setDao.getSetsForWorkout(client, workoutId);
+            return await this.setDao.getSetsForWorkout(dbClient, workoutId);
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -32,15 +34,20 @@ export class SetService {
 
             console.error('An error occurred while getting sets for workout.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client) {
+                dbClient.release();
+            }
         }
     }
 
     async getSetForId(id, client) {
+        let dbClient = client;
         try {
             if (!client) {
-                client = await this.databaseClientFactory.obtain();
+                dbClient = await this.databaseClientFactory.obtain();
             }
-            const result = await this.setDao.getSetForId(client, id);
+            const result = await this.setDao.getSetForId(dbClient, id);
             if (!result || result.length === 0) {
                 throw new ServerError(ErrorCode.NOT_FOUND, `Could not find set for id ${id}.`);
             }
@@ -52,17 +59,25 @@ export class SetService {
 
             console.error('An error occurred while getting set by id.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client) {
+                dbClient.release();
+            }
         }
     }
 
     async insertSet(set, client) {
+        let dbClient = client;
         try {
             this.validateSet(set);
             if (!client) {
-                client = await this.databaseClientFactory.obtain();
+                dbClient = await this.databaseClientFactory.obtain();
             }
-            const setId = await this.setDao.insertSet(client, set);
-            return await this.getSetForId(setId, client);
+
+            return await transactional(dbClient, async () => {
+                const setId = await this.setDao.insertSet(dbClient, set);
+                return await this.getSetForId(setId, dbClient);
+            });
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -70,10 +85,15 @@ export class SetService {
 
             console.error('An error occurred while inserting sets.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client) {
+                dbClient.release();
+            }
         }
     }
 
     async updateSet(setId, set, client) {
+        let dbClient = client;
         try {
             if (!setId || setId < 1) {
                 throw new ServerError(ErrorCode.INVALID_REQUEST, 'Set id must be non null and greater than zero.');
@@ -82,10 +102,13 @@ export class SetService {
             set.id = setId;
 
             if (!client) {
-                client = await this.databaseClientFactory.obtain();
+                dbClient = await this.databaseClientFactory.obtain();
             }
-            await this.setDao.updateSet(client, set);
-            return await this.getSetForId(setId, client);
+
+            return await transactional(dbClient, async () => {
+                await this.setDao.updateSet(dbClient, set);
+                return await this.getSetForId(setId, dbClient);
+            });
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -93,8 +116,11 @@ export class SetService {
 
             console.error('An error occurred while updating set data.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client)  {
+                dbClient.release();
+            }
         }
-
     }
 
     validateSet(set) {

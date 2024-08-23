@@ -27,6 +27,7 @@ export class WorkoutService {
     }
 
     async getWorkoutForDate(dateString, client) {
+        let dbClient = client;
         try {
             if (!dateString) {
                 throw new ServerError(ErrorCode.INVALID_REQUEST, 'Date was not provided.');
@@ -39,16 +40,17 @@ export class WorkoutService {
             const dateKey = convertDateToYYYYMMDD(new Date(Date.parse(dateString)));
 
             if (!client) {
-                client = await this.databaseClientFactory.obtain();
+                dbClient = await this.databaseClientFactory.obtain();
             }
 
-            const data = await this.workoutDao.getWorkoutForDate(client, dateKey);
+            const data = await this.workoutDao.getWorkoutForDate(dbClient, dateKey);
             if (!data || data.length === 0) {
                 throw new ServerError(ErrorCode.NOT_FOUND, 'No workouts found for the specified date.');
             }
 
             const workoutData = data[0];
-            return await this.convertToApi(workoutData, client);
+            const result = await this.convertToApi(workoutData, dbClient);
+            return result;
         } catch (e) {
             if (e instanceof ServerError) {
                 throw e;
@@ -56,6 +58,10 @@ export class WorkoutService {
 
             console.error("An unexpected error occurred while getting workout for date.", e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client) {
+                dbClient.release();
+            }
         }
     }
 

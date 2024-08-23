@@ -29,7 +29,5 @@ export async function transactional(client, callback) {
     } catch (e) {
         await client.query('ROLLBACK');
         throw e;
-    } finally {
-        client.release();
     }
 }
