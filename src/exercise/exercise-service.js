@@ -44,7 +44,7 @@ export class ExerciseService {
             console.error('An error occurred while getting all exercises for a given group.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-           if (!client)  {
+           if (!client && dbClient)  {
                dbClient.release();
            }
         }
@@ -80,7 +80,7 @@ export class ExerciseService {
             console.error('An error occurred while getting exercises by ids.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client) {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }

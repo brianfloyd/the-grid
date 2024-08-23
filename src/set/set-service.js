@@ -35,7 +35,7 @@ export class SetService {
             console.error('An error occurred while getting sets for workout.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client) {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }
@@ -60,7 +60,7 @@ export class SetService {
             console.error('An error occurred while getting set by id.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client) {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }
@@ -86,7 +86,7 @@ export class SetService {
             console.error('An error occurred while inserting sets.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client) {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }
@@ -117,7 +117,7 @@ export class SetService {
             console.error('An error occurred while updating set data.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client)  {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }

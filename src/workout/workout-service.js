@@ -59,7 +59,7 @@ export class WorkoutService {
             console.error("An unexpected error occurred while getting workout for date.", e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         } finally {
-            if (!client) {
+            if (!client && dbClient) {
                 dbClient.release();
             }
         }
