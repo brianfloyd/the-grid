@@ -62,7 +62,6 @@ export class SetService {
                 client = await this.databaseClientFactory.obtain();
             }
             const setId = await this.setDao.insertSet(client, set);
-            console.log('setId', setId);
             return await this.getSetForId(setId, client);
         } catch (e) {
             if (e instanceof ServerError) {
@@ -72,6 +71,30 @@ export class SetService {
             console.error('An error occurred while inserting sets.', e);
             throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
         }
+    }
+
+    async updateSet(setId, set, client) {
+        try {
+            if (!setId || setId < 1) {
+                throw new ServerError(ErrorCode.INVALID_REQUEST, 'Set id must be non null and greater than zero.');
+            }
+            this.validateSet(set);
+            set.id = setId;
+
+            if (!client) {
+                client = await this.databaseClientFactory.obtain();
+            }
+            await this.setDao.updateSet(client, set);
+            return await this.getSetForId(setId, client);
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
+
+            console.error('An error occurred while updating set data.', e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        }
+
     }
 
     validateSet(set) {
@@ -88,7 +111,11 @@ export class SetService {
         }
 
         if (!set.reps || set.reps < 0) {
-            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provieded reps was not valid.');
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided reps was not valid.');
+        }
+
+        if (!set.count || set.count < 0) {
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided count was not valid.');
         }
     }
 

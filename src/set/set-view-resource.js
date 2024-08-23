@@ -31,7 +31,8 @@ export class SetViewResource {
      * Path: /set/view/:setId/save
      */
     async saveExistingSet(request, response) {
-
+        const result = await this.setService.updateSet(request.params.setId, request.body);
+        return _200(response, result);
     }
 
     /**
@@ -41,6 +42,6 @@ export class SetViewResource {
      */
     bind(app) {
         app.post(`${SetViewResource.URL_PREFIX}/save`, this.saveNewSet.bind(this));
-        // app.post(`${ExerciseViewResource.URL_PREFIX}/:setId/save`, this.getAllExercisesForGroup.bind(this));
+        app.post(`${SetViewResource.URL_PREFIX}/:setId/save`, this.saveExistingSet.bind(this));
     }
 }

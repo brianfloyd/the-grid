@@ -4,4 +4,5 @@ export class WorkoutSet {
     exerciseId; // number
     weight;     // number
     reps;       // number
+    count;      // number
 }
