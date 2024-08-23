@@ -253,7 +253,11 @@ td {
     display: block;
 }
 .highlighted{
+    background-color: green !important;
+}
+.edit-icon{
     background-color: yellow !important;
 }
+
 
 }

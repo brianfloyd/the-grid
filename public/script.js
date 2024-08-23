@@ -3,9 +3,9 @@
 class DOMSETUP {
 
 constructor(){
-  this.getData= async (api,param) => {
+  this.getData = async (api,param) => {
    
-    if(param===null)param="";
+    if(!param)param="";
     else{ param = param.replace(/\//g, '-');}
     try {
                 const response = await fetch(`${api}${param}`);
@@ -17,36 +17,60 @@ constructor(){
             } catch (error) {
                 console.error('There has been a problem with your fetch operation:', error);
             }
-    
-  }
+    }
 
 }
-createGrid(){
+createGrid(expandGroup){
+    if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/service-worker.js')
+                      .then((registration) => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                      })
+                      .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                      });
+                  }
+ console.log(expandGroup)
+ let table =document.getElementById(`table-${expandGroup}`)
+    if(expandGroup && table){
+       
+            while (table.firstChild) {
+                table.removeChild(table.firstChild);
+            }
+this.getData(`/exercise/view/group/${expandGroup}`,null).then(data=>{
+    createGridItems(data);
+    })
+
+}else {
     const root =  document.getElementById('root');
+    if(document.getElementsByClassName('grid-icons').length<1){
     const icondiv =  this.createElement('div',null,['grid-icons']);
     this.getData(`/exercise/view/groups/all`,null).then(groups=>{
     for (let muscleGroup of groups){
-        console.log(muscleGroup)
-   
-    icondiv.append(this.createElement('i',`icon-${muscleGroup.name.toLowerCase()}`));
+    icondiv.append(this.createElement('i',`icon-${muscleGroup.name.toLowerCase()}`,['icon']));
     root.append(icondiv);
     let img = this.createElement('img');
     img.src=muscleGroup.image.toLowerCase();
-    document.getElementById(`icon-${muscleGroup.name.toLowerCase()}`).appendChild(img)
-
-    }
-   
+    let icon = document.getElementById(`icon-${muscleGroup.name.toLowerCase()}`)
+    icon.appendChild(img);
+    icon.addEventListener('click',function(){
+     start.iconSelected(this);
     })
+    }
+    })
+    createGridItems();
+}
+}
 
-
-    this.getData(`/workout/view/date/`,this.getToday()).then(excerciseData=>{
- 
+function createGridItems(muscleGroup){
+    start.getData(`/workout/view/date/`,start.getToday()).then(excerciseData=>{
+        console.log(excerciseData)
+        if(muscleGroup)excerciseData.sets=muscleGroup;
         for (let excercise of excerciseData.sets ){
             if(!document.getElementById(`table-${excercise.group}`)){
-            
-                const obj =this.createElement('div');
-                const table=this.createElement('table');
-                const tablebody=this.createElement('tbody');
+                const obj =start.createElement('div');
+                const table=start.createElement('table');
+                const tablebody=start.createElement('tbody');
                 tablebody.id=`table-${excercise.group}`;
                 document.getElementById(`icon-${excercise.group.toLowerCase()}`).classList.add('highlighted')
                 table.append(tablebody);
@@ -71,24 +95,39 @@ createGrid(){
                 repsCell.setAttribute('onclick', 'start.makeEditable(this)');
                 weightCell.textContent = excercise.weight;
                 repsCell.textContent = excercise.reps;
-                nextCell.innerHTML='<td class="button-cell"><button class="add-btn" onclick="start.incrementExcercise(this)">+</button></td>';
+
+                const buttonElement = start.createElement('button', null, ['add-btn']);
+                buttonElement.innerText = '+';
+                buttonElement.onclick = () => start.incrementExcercise(buttonElement, excercise, excerciseData.id);
+                nextCell.appendChild(buttonElement);
+
+                if(muscleGroup){
+                    row.deleteCell(1);
+                    row.deleteCell(2);
+                    // row.deleteCell(3);
+                }
         }
     })
 }
-incrementExcercise(element){
-          
-              let excercise=element.parentElement.parentElement.childNodes[0].innerText;
-              let weight=element.parentElement.parentElement.childNodes[1].innerText;
-              let reps=element.parentElement.parentElement.childNodes[2].innerText;
-              
-              let incrementColumn = element.parentElement.nextSibling;
-              incrementColumn.classList.remove('hide-count');
-              let currentValue = incrementColumn.textContent;
-              if (currentValue =>1)currentValue++;
-              if (currentValue==='')currentValue=1;
-              incrementColumn.textContent=currentValue;
+}
+
+incrementExcercise(element,data, workoutId){
+    console.log('inc exc', element, data,workoutId);
+    let excercise=element.parentElement.parentElement.childNodes[0].innerText;
+    let weight=element.parentElement.parentElement.childNodes[1].innerText;
+    let reps=element.parentElement.parentElement.childNodes[2].innerText;
+    let incrementColumn = element.parentElement.nextSibling;
+    incrementColumn.classList.remove('hide-count');
+    let currentValue = incrementColumn.textContent;
+    if (currentValue =>1)currentValue++;
+    if (currentValue==='')currentValue=1;
+    incrementColumn.textContent=currentValue;
+    console.log(excercise)
+
+    fetch(`/set`)
+    // make a request
            
-     }
+}
     decrementExcercise(element){
         console.log(element)
         let excercise = element.parentElement.childNodes[0].innerText;
@@ -108,6 +147,20 @@ incrementExcercise(element){
             input.focus();
             input.select();
         }
+    iconSelected(element){
+        if(element.classList.contains('edit-icon')){
+            console.log('already selected')
+            element.classList.remove('edit-icon');
+        }else{
+            let siblings = this.getSiblings(element);
+            siblings.forEach(sibling=>sibling.classList.remove('edit-icon'))
+            element.classList.add('edit-icon');
+            let muscleGroup=element.id.split('-')[1].toUpperCase();
+            this.createGrid(muscleGroup)
+        }
+
+
+    }
 
 createElement(kind,id,classList){
     const doc = document.createElement(kind);
@@ -142,6 +195,18 @@ getToday(){
         let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based, so add 1
         let day = date.getDate().toString().padStart(2, '0');
         return `${year}/${month}/${day}`;
+}
+getSiblings(element) {
+    // Get the parent node of the element
+    let parent = element.parentNode;
+
+    // Get all children of the parent node
+    let children = Array.prototype.slice.call(parent.children);
+
+    // Filter out the original element to get only siblings
+    return children.filter(function(child) {
+        return child !== element;
+    });
 }
 
 
