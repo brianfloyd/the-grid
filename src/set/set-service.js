@@ -35,4 +35,61 @@ export class SetService {
         }
     }
 
+    async getSetForId(id, client) {
+        try {
+            if (!client) {
+                client = await this.databaseClientFactory.obtain();
+            }
+            const result = await this.setDao.getSetForId(client, id);
+            if (!result || result.length === 0) {
+                throw new ServerError(ErrorCode.NOT_FOUND, `Could not find set for id ${id}.`);
+            }
+            return result;
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
+
+            console.error('An error occurred while getting set by id.', e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        }
+    }
+
+    async insertSet(set, client) {
+        try {
+            this.validateSet(set);
+            if (!client) {
+                client = await this.databaseClientFactory.obtain();
+            }
+            const setId = await this.setDao.insertSet(client, set);
+            console.log('setId', setId);
+            return await this.getSetForId(setId, client);
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
+
+            console.error('An error occurred while inserting sets.', e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        }
+    }
+
+    validateSet(set) {
+        if (!set.workoutId || set.workoutId < 0) {
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided workout id was not valid.');
+        }
+
+        if (!set.exerciseId || set.exerciseId < 0) {
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided exercise id was not valid.');
+        }
+
+        if (!set.weight || set.weight < 0) {
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided weight was not valid.');
+        }
+
+        if (!set.reps || set.reps < 0) {
+            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provieded reps was not valid.');
+        }
+    }
+
 }

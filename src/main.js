@@ -4,7 +4,6 @@ import {DatabaseClientFactory} from "./config/database-client-factory.js";
 import {GlobalErrorHandler} from "./server/global-error-handler.js";
 import {configureExerciseObjects} from "./config/exercise-config.js";
 import {configureWorkoutObjects} from "./config/workout-config.js";
-import {_200} from "./server/server-utils.js";
 import {configureSetObjets} from "./config/set-config.js";
 
 const env = process.env.NODE_ENV || 'test';
@@ -32,7 +31,8 @@ const {
 } = configureExerciseObjects(dbClientFactory);
 
 const {
-    setService
+    setService,
+    setViewResource
 } = configureSetObjets(dbClientFactory);
 
 const {
@@ -44,6 +44,7 @@ const {
 const server = setupServer();
 workoutViewResource.bind(server);
 exerciseViewResource.bind(server);
+setViewResource.bind(server);
 new GlobalErrorHandler().bind(server);
 
 server.listen(PORT, '0.0.0.0', () => {
