@@ -28,12 +28,18 @@ export class WorkoutDisplayService {
      */
     async getWorkoutViewForDate(dateString) {
         try {
+            console.time('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             // TODO: Switch to passing the date when the front end is ready for it.
+            console.time('WorkoutDisplayService#getWorkoutForDate');
             const workout = await this.workoutService.getWorkoutForDate('2024-08-19');
+            console.timeEnd('WorkoutDisplayService#getWorkoutForDate');
 
             let workoutView = new WorkoutView(workout);
             workoutView.date = dateString;
+            console.time('WorkoutDisplayService#populateSets');
             workoutView = await this.populateSets(workoutView, workout);
+            console.timeEnd('WorkoutDisplayService#populateSets');
+            console.timeEnd('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             return workoutView;
         } catch (e) {
             if (e instanceof ServerError) {
