@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx nodemon ./src/main.js",
-    "start-prod": "NODE_ENV=prod && npm start ./src/main.js"
+    "start-prod": "NODE_ENV=prod && node ./src/main.js"
   },
   "author": "",
   "license": "ISC",
