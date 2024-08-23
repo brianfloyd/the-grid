@@ -19,6 +19,7 @@ process.env = {
     ...config
 }
 
+
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL || 'NO_DATABASE_URL';
 console.log(`Connecting to database at ${DATABASE_URL.split('@')[1] || 'Invalid database url.'}`);
