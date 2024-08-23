@@ -8,7 +8,7 @@ export class SetDao {
     static INSERT_SET = 'insert into the_grid.set (set_id, set_exr_id, set_wrk_id, set_reps, set_weight, set_count)' +
         ` values (${SetDao.NEXT_SEQUENCE_VALUE}, $1, $2, $3, $4, $5) returning set_id`;
     static UPDATE_SET = 'update the_grid.set set set_exr_id = $1, set_wrk_id = $2, set_reps = $3, set_weight = $4,' +
-        ' set_count = $5';
+        ' set_count = $5 where set_id = $6';
 
     async getSetForId(client, id) {
         const result = await client.query(SetDao.SELECT_SET_FOR_ID, [id]);
@@ -26,7 +26,7 @@ export class SetDao {
     }
 
     async updateSet(client, set) {
-        await client.query(SetDao.UPDATE_SET, this.getParameters(set));
+        await client.query(SetDao.UPDATE_SET, [...this.getParameters(set), set.id]);
     }
 
     getParameters(set) {
