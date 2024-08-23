@@ -40,7 +40,6 @@ export class SetViewResource {
      * app: Express Application
      */
     bind(app) {
-        console.log('binding set view');
         app.post(`${SetViewResource.URL_PREFIX}/save`, this.saveNewSet.bind(this));
         // app.post(`${ExerciseViewResource.URL_PREFIX}/:setId/save`, this.getAllExercisesForGroup.bind(this));
     }
