@@ -21,6 +21,7 @@ process.env = {
 
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL || 'NO_DATABASE_URL';
+console.log(`Configured database url ${DATABASE_URL}`);
 
 // Configure and wire up services.
 const dbClientFactory = new DatabaseClientFactory(DATABASE_URL);
