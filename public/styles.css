@@ -258,6 +258,16 @@ td {
 .edit-icon{
     background-color: yellow !important;
 }
-
+.white-text{
+    color:white;
+}
+.included{
+    background-color:red;
+    color:white;
+}
+.not-included{
+    background-color:green;
+    color:white;
+}
 
 }

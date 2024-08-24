@@ -1,10 +1,10 @@
 const CACHE_NAME = 'my-web-app-cache-v1';
 const urlsToCache = [
-    '/',
-    '/script.js',
-    '/index.html',
-    '/styles.css',
-    '/manifest.json',
+    // '/',
+    // '/script.js',
+    // '/index.html',
+    // '/styles.css',
+    '/manifest.json'
 ];
 
 self.addEventListener('install', event => {
