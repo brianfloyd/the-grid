@@ -38,7 +38,7 @@ createGrid(expandGroup){
                 table.removeChild(table.firstChild);
             }
 this.getData(`/exercise/view/group/${expandGroup}`,null).then(data=>{
-    createGridItems(data);
+    this.createGridItems(data);
     })
 
 }else {
@@ -58,15 +58,16 @@ this.getData(`/exercise/view/group/${expandGroup}`,null).then(data=>{
     })
     }
     })
-    createGridItems();
+    this.createGridItems();
 }
 }
-
-function createGridItems(muscleGroup){
+}
+createGridItems(muscleGroup){
     start.getData(`/workout/view/date/`,start.getToday()).then(excerciseData=>{
-        console.log(excerciseData)
+     
         if(muscleGroup)excerciseData.sets=muscleGroup;
         for (let excercise of excerciseData.sets ){
+           
             if(!document.getElementById(`table-${excercise.group}`)){
                 const obj =start.createElement('div');
                 const table=start.createElement('table');
@@ -78,7 +79,7 @@ function createGridItems(muscleGroup){
                 obj.classList.add('the-grid');
                 const grid = document.getElementById('the-grid');
                 root.append(obj);
-            }
+            }else{
                 const tb = document.getElementById(`table-${excercise.group}`);
                 const row = tb.insertRow();
                 const excerciseCell = row.insertCell(0);
@@ -86,8 +87,8 @@ function createGridItems(muscleGroup){
                 const repsCell = row.insertCell(2);
                 const nextCell = row.insertCell(3);
                 const count = row.insertCell(4);
-                count.classList.add('hide-count');
                 count.setAttribute('onclick', 'start.decrementExcercise(this)');
+                count.textContent=excercise.count;
                 excerciseCell.textContent = excercise.name || '';
                 weightCell.classList.add('data-cell','updatable');
                 repsCell.classList.add('data-cell','updatable');
@@ -95,21 +96,22 @@ function createGridItems(muscleGroup){
                 repsCell.setAttribute('onclick', 'start.makeEditable(this)');
                 weightCell.textContent = excercise.weight;
                 repsCell.textContent = excercise.reps;
-
                 const buttonElement = start.createElement('button', null, ['add-btn']);
                 buttonElement.innerText = '+';
                 buttonElement.onclick = () => start.incrementExcercise(buttonElement, excercise, excerciseData.id);
                 nextCell.appendChild(buttonElement);
-
                 if(muscleGroup){
                     row.deleteCell(1);
                     row.deleteCell(2);
                     // row.deleteCell(3);
                 }
+             
+    
         }
+    }
     })
 }
-}
+
 
 incrementExcercise(element,data, workoutId){
     console.log('inc exc', element, data,workoutId);
@@ -124,9 +126,18 @@ incrementExcercise(element,data, workoutId){
     incrementColumn.textContent=currentValue;
     console.log(excercise)
 
-    fetch(`/set`)
-    // make a request
-           
+    fetch(`/set/view/${data.id}/save`, {
+        method: "POST",
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify({
+            ...data,
+            workoutId,
+            count: data.count + 1
+        })
+    });
+  
 }
     decrementExcercise(element){
         console.log(element)
@@ -149,8 +160,11 @@ incrementExcercise(element,data, workoutId){
         }
     iconSelected(element){
         if(element.classList.contains('edit-icon')){
-            console.log('already selected')
+            console.log('already selected');
             element.classList.remove('edit-icon');
+            let elements = document.querySelectorAll('[id^="table-"]');
+            elements.forEach(element=>this.clearTable(element))
+            this.createGridItems();
         }else{
             let siblings = this.getSiblings(element);
             siblings.forEach(sibling=>sibling.classList.remove('edit-icon'))
@@ -207,6 +221,12 @@ getSiblings(element) {
     return children.filter(function(child) {
         return child !== element;
     });
+}
+clearTable(table){
+    while (table.firstChild) {
+        table.removeChild(table.firstChild);
+    }
+
 }
 
 

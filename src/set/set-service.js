@@ -124,6 +124,7 @@ export class SetService {
     }
 
     validateSet(set) {
+        console.log(set);
         if (!set.workoutId || set.workoutId < 0) {
             throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided workout id was not valid.');
         }
