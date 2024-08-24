@@ -19,17 +19,22 @@ constructor(){
             }
     }
 
+    this.registerServiceWorker =(()=>{
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+              })
+              .catch((error) => {
+                console.log('Service Worker registration failed:', error);
+              });
+          }
+
+    })();
+
 }
 createGrid(expandGroup){
-    if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('/service-worker.js')
-                      .then((registration) => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                      })
-                      .catch((error) => {
-                        console.log('Service Worker registration failed:', error);
-                      });
-                  }
+ 
  console.log(expandGroup)
  let table =document.getElementById(`table-${expandGroup}`)
     if(expandGroup && table){
@@ -69,6 +74,7 @@ createGridItems(muscleGroup){
         for (let excercise of excerciseData.sets ){
            
             if(!document.getElementById(`table-${excercise.group}`)){
+              
                 const obj =start.createElement('div');
                 const table=start.createElement('table');
                 const tablebody=start.createElement('tbody');
@@ -89,6 +95,7 @@ createGridItems(muscleGroup){
                 const count = row.insertCell(4);
                 count.setAttribute('onclick', 'start.decrementExcercise(this)');
                 count.textContent=excercise.count;
+                console.log('bang')
                 excerciseCell.textContent = excercise.name || '';
                 weightCell.classList.add('data-cell','updatable');
                 repsCell.classList.add('data-cell','updatable');
