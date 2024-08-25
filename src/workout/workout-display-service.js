@@ -31,7 +31,7 @@ export class WorkoutDisplayService {
             console.time('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             // TODO: Switch to passing the date when the front end is ready for it.
             console.time('WorkoutDisplayService#getWorkoutForDate');
-            const workout = await this.workoutService.getWorkoutForDate('2024-08-19');
+            const workout = await this.workoutService.getWorkoutForDate(dateString);
             console.timeEnd('WorkoutDisplayService#getWorkoutForDate');
 
             let workoutView = new WorkoutView(workout);

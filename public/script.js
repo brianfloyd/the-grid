@@ -45,51 +45,42 @@ constructor(){
 
 }
 createGrid(expandGroup){
- 
- console.log(expandGroup)
- let table =document.getElementById(`table-${expandGroup}`)
+    let table =document.getElementById(`table-${expandGroup}`)
     if(expandGroup && table){
-       
             while (table.firstChild) {
                 table.removeChild(table.firstChild);
             }
-this.getData(`/exercise/view/group/${expandGroup}`,null).then(data=>{
-  
-    this.createGridItems(data);
-    })
-
-}else {
-    const root =  document.getElementById('root');
-    if(document.getElementsByClassName('grid-icons').length<1){
-    const icondiv =  this.createElement('div',null,['grid-icons']);
-    this.getData(`/exercise/view/groups/all`,null).then(groups=>{
-        console.log(JSON.stringify(groups))
-    for (let muscleGroup of groups){
-    icondiv.append(this.createElement('i',`icon-${muscleGroup.name.toLowerCase()}`,['icon']));
-    root.append(icondiv);
-    let img = this.createElement('img');
-    img.src=muscleGroup.image.toLowerCase();
-    let icon = document.getElementById(`icon-${muscleGroup.name.toLowerCase()}`)
-    icon.appendChild(img);
-    icon.addEventListener('click',function(){
-     start.iconSelected(this);
-    })
+        this.getData(`/exercise/view/group/${expandGroup}`,null).then(data=>{
+         this.createGridItems(data);})
+    }else{  
+        const root =  document.getElementById('root');
+        if(document.getElementsByClassName('grid-icons').length<1){
+         const icondiv =  this.createElement('div',null,['grid-icons']);
+            this.getData(`/exercise/view/groups/all`,null).then(groups=>{
+                for (let muscleGroup of groups){
+                icondiv.append(this.createElement('i',`icon-${muscleGroup.name.toLowerCase()}`,['icon']));
+                root.append(icondiv);
+                let img = this.createElement('img');
+                img.src=muscleGroup.image.toLowerCase();
+                let icon = document.getElementById(`icon-${muscleGroup.name.toLowerCase()}`)
+                icon.appendChild(img);
+                icon.addEventListener('click',function(){
+                start.iconSelected(this);
+                })
+                }
+            })
+         this.createGridItems();
+        }
     }
-    })
-    this.createGridItems();
-}
-}
 }
 createGridItems(muscleGroup){
     start.getData(`/workout/view/date/`,start.getToday()).then(excerciseData=>{
         let legacyData={};
-        console.log(excerciseData.sets)
-        if(muscleGroup){
-            legacyData=excerciseData.sets;
-            excerciseData.sets=muscleGroup;
-        }
+            if(muscleGroup){
+             legacyData=excerciseData.sets;
+             excerciseData.sets=muscleGroup;
+            }
         for (let excercise of excerciseData.sets ){
-           
             if(!document.getElementById(`table-${excercise.group}`)){
                 const obj =start.createElement('div');
                 const table=start.createElement('table');
@@ -111,7 +102,7 @@ createGridItems(muscleGroup){
                 const count = row.insertCell(4);
                 count.setAttribute('onclick', 'start.decrementExcercise(this)');
                 count.textContent=excercise.count;
-                if(excercise.count===0)count.textContent='';
+            if(excercise.count===0)count.textContent='';
                 excerciseCell.textContent = excercise.name || '';
                 weightCell.classList.add('data-cell','updatable');
                 repsCell.classList.add('data-cell','updatable');
@@ -124,7 +115,7 @@ createGridItems(muscleGroup){
                 buttonElement.onclick = () => start.incrementExcercise(buttonElement, excercise, excerciseData.id);
                 nextCell.appendChild(buttonElement);
                 nextCell.id='button'
-                if(muscleGroup){  
+            if(muscleGroup){  
                     const rows = document.querySelectorAll('tr');
                     rows.forEach(row => {
                         // Get all <td> elements within the current row
@@ -132,7 +123,6 @@ createGridItems(muscleGroup){
                         // Iterate backward to avoid index issues when removing elements
                         for (let i = cells.length - 1; i >= 0; i--) {
                             const cell = cells[i];
-                            
                             // Skip the first <td> and the <td> with id="button"
                             if (i !== 0 && cell.id !== 'button') {
                                 row.deleteCell(i);
@@ -140,22 +130,31 @@ createGridItems(muscleGroup){
                         }
                     });
                     for(let ex of legacyData){
-                      
+                
+                        let buttons = document.querySelectorAll(`#table-${excerciseData.sets[0].group} .add-btn`);
+                        buttons.forEach(function(button) {
+                            const newButton = button.cloneNode(true);
+                            if(ex.name ===excercise.name){
+                            newButton.classList.add('included');
+                            newButton.innerText='-';
+                            }
+                            button.parentNode.replaceChild(newButton, button);
+                            newButton.addEventListener('click',function(){
+                                const excerciseToAdd=this.parentElement.parentElement.firstChild.textContent;
+                                const group = excerciseData.sets[0].group;
+                                console.log(excerciseToAdd, group)
+
+
+                            })
+                        });
                         if(ex.name===excercise.name){
                             excerciseCell.classList.add('white-text');
-                            buttonElement.innerText='-';
-                            buttonElement.classList.add('included');
-                       
                         }
                     }
                 }
-                
-            
-    // Iterate through each row
-
-                }
+         }
                     
-                }
+    }
              
     
         
@@ -165,7 +164,7 @@ createGridItems(muscleGroup){
 
 
 incrementExcercise(element,data, workoutId){
-    console.log('inc exc', element, data,workoutId);
+ 
     let excercise=element.parentElement.parentElement.childNodes[0].innerText;
     let weight=element.parentElement.parentElement.childNodes[1].innerText;
     let reps=element.parentElement.parentElement.childNodes[2].innerText;
