@@ -13,13 +13,13 @@ constructor(){
                 if(data.errorCode){
                     if(data.errorCode==='NOT_FOUND'  || 'GENERIC_ERROR'){
                         let paramApi = api.split('/').pop();
-                        
-                       console.log(paramApi)
-                        if(api==='/workout/view/date/')return {"id":1,"date":"2024-08-24","sets":[{"id":2,"exerciseId":2,"name":"Seated Curls","group":"BICEP","weight":40,"reps":90,"count":0},{"id":5,"exerciseId":17,"name":"Overhead seated press","group":"TRICEP","weight":40,"reps":90,"count":0},{"id":3,"exerciseId":16,"name":"Dumbbell Skull Crusher","group":"TRICEP","weight":40,"reps":90,"count":1},{"id":4,"exerciseId":16,"name":"Dumbbell Skull Crusher","group":"TRICEP","weight":40,"reps":90,"count":1},{"id":6,"exerciseId":2,"name":"Seated Curls","group":"BICEP","weight":40,"reps":90,"count":3},{"id":1,"exerciseId":1,"name":"Concentrated Curls","group":"BICEP","weight":40,"reps":90,"count":4}]}
-                        if(api.includes('/exercise/view/group/')) {
-                            return [{"id":1,"name":"Concentrated Curls","group":"BICEP"},{"id":2,"name":"Seated Curls","group":"BICEP"},{"id":3,"name":"Straight Bar Curls","group":"BICEP"},{"id":4,"name":"Head Curls","group":"BICEP"},{"id":5,"name":"Seated Cable Curls","group":"BICEP"}];
-                        }
-                        if(api==='/exercise/view/groups/all')return [{"name":"BICEP","image":"images/icons/bicep.png","order":1},{"name":"BACK","image":"images/icons/back.png","order":2},{"name":"TRICEP","image":"images/icons/tricep.png","order":3},{"name":"CHEST","image":"images/icons/chest.png","order":4},{"name":"SHOULDER","image":"images/icons/shoulder.png","order":5},{"name":"LEGS","image":"images/icons/legs.png","order":6},{"name":"ABS","image":"images/icons/abs.png","order":7},{"name":"CARDIO","image":"images/icons/cardio.png","order":8},{"name":"MISC","image":"images/icons/misc.png","order":9}];
+                        return 'Date has no data'
+                    //    console.log(paramApi)
+                    //     if(api==='/workout/view/date/')return {"id":1,"date":"2024-08-24","sets":[{"id":2,"exerciseId":2,"name":"Seated Curls","group":"BICEP","weight":40,"reps":90,"count":0},{"id":5,"exerciseId":17,"name":"Overhead seated press","group":"TRICEP","weight":40,"reps":90,"count":0},{"id":3,"exerciseId":16,"name":"Dumbbell Skull Crusher","group":"TRICEP","weight":40,"reps":90,"count":1},{"id":4,"exerciseId":16,"name":"Dumbbell Skull Crusher","group":"TRICEP","weight":40,"reps":90,"count":1},{"id":6,"exerciseId":2,"name":"Seated Curls","group":"BICEP","weight":40,"reps":90,"count":3},{"id":1,"exerciseId":1,"name":"Concentrated Curls","group":"BICEP","weight":40,"reps":90,"count":4}]}
+                    //     if(api.includes('/exercise/view/group/')) {
+                    //         return [{"id":1,"name":"Concentrated Curls","group":"BICEP"},{"id":2,"name":"Seated Curls","group":"BICEP"},{"id":3,"name":"Straight Bar Curls","group":"BICEP"},{"id":4,"name":"Head Curls","group":"BICEP"},{"id":5,"name":"Seated Cable Curls","group":"BICEP"}];
+                    //     }
+                    //     if(api==='/exercise/view/groups/all')return [{"name":"BICEP","image":"images/icons/bicep.png","order":1},{"name":"BACK","image":"images/icons/back.png","order":2},{"name":"TRICEP","image":"images/icons/tricep.png","order":3},{"name":"CHEST","image":"images/icons/chest.png","order":4},{"name":"SHOULDER","image":"images/icons/shoulder.png","order":5},{"name":"LEGS","image":"images/icons/legs.png","order":6},{"name":"ABS","image":"images/icons/abs.png","order":7},{"name":"CARDIO","image":"images/icons/cardio.png","order":8},{"name":"MISC","image":"images/icons/misc.png","order":9}];
                     }
                 }
                
@@ -49,6 +49,10 @@ async createGrid2(){
 
 
         const allExerciseGroups = await this.getData(`/exercise/view/groups/all`,null);
+        if(!allExerciseGroups){
+            console.log('no data')
+            return;
+        }
         const root =  document.getElementById('root');
         const icondiv =  this.createElement('div',null,['grid-icons']);
             for (const group of allExerciseGroups){
@@ -72,22 +76,32 @@ async createGrid2(){
             const table=start.createElement('table');
             const tablebody=start.createElement('tbody');
             tablebody.id=`table-${group.name}`;
-            document.getElementById(`icon-${group.name.toLowerCase()}`).classList.add('highlighted')
             table.append(tablebody);
             obj.append(table);
             obj.classList.add('the-grid');
             const grid = document.getElementById('the-grid');
             root.append(obj);
         }
+        const noData = start.createElement('div','no-data',['hide']);
+        noData.textContent= 'No data yet for this date';
+        root.append(noData)
            
 }
 
 async createThisDate(){
+    console.log(this.workoutDate)
 
-    const thisDateData= await this.getData(`/workout/view/date/`,start.getToday());
-    console.log(thisDateData)
+    const thisDateData= await this.getData(`/workout/view/date/`,this.workoutDate);
+    if(thisDateData==='Date has no data'){
+        document.getElementById('no-data').classList.remove('hide');
+        return;
+
+    }else{
+        document.getElementById('no-data').classList.add('hide')
+    }
     for(const excercise of thisDateData.sets){
-        console.log(excercise)
+        console.log(excercise);
+        document.getElementById(`icon-${excercise.group.toLowerCase()}`).classList.add('highlighted')
     const tb = document.getElementById(`table-${excercise.group}`);
     const row = tb.insertRow();
     const excerciseCell = row.insertCell(0);
@@ -111,16 +125,15 @@ if(excercise.count===0)count.textContent='';
     nextCell.appendChild(buttonElement);
     nextCell.id='button'
     }
-
-
-
 }
 
 async createGridDayEditor(muscleGroup){
+    document.getElementById('no-data').classList.add('hide');
    const  exerciseToDisplay = await this.getData(`/exercise/view/group/${muscleGroup}`);
    const exerciseMap={};
    exerciseToDisplay.forEach(item=>exerciseMap[item.name]={id:item.id,group:item.group,name:item.name})
-   const  thisDayExercise= await this.getData(`/workout/view/date/`,start.getToday());
+   const  thisDayExercise= await this.getData(`/workout/view/date/`,this.workoutDate);
+   console.log(thisDayExercise)
    const allGridItems = document.querySelectorAll('[id^="table-"]');
    Array.from(allGridItems).forEach(item => {
     while (item.firstChild) {
@@ -136,11 +149,12 @@ async createGridDayEditor(muscleGroup){
     const buttonElement = start.createElement('button', null, ['add-btn']);
     exerciseCell.textContent = exercise.name;
     buttonElement.innerText = '+';
-    buttonElement.onclick = () => start.editDayExcercise(exercise)
+    buttonElement.onclick = () => start.editDayExercise(exercise)
     nextCell.appendChild(buttonElement);
     nextCell.id='button'
    
    } 
+   if(thisDayExercise==='Date has no data')return;
    for(let ex of thisDayExercise.sets){
                 console.log(thisDayExercise.sets[0].group)
     let buttons = document.querySelectorAll(`#table-${thisDayExercise.sets[0].group} .add-btn`);
@@ -166,9 +180,6 @@ async createGridDayEditor(muscleGroup){
 
        })
     });
-    // if(ex.name===exercise){
-    //     excerciseCell.classList.add('white-text');
-    // }
 }
 }
 
@@ -189,7 +200,7 @@ incrementExcercise(element,data, workoutId){
     if (currentValue =>1)currentValue++;
     if (currentValue==='')currentValue=1;
     incrementColumn.textContent=currentValue;
-    console.log(excercise)
+    console.log(data)
 
     fetch(`/set/view/${data.id}/save`, {
         method: "POST",
@@ -305,7 +316,10 @@ updateDate(){
     let day = this.currentDate.getDate().toString();
     let year = this.currentDate.getFullYear();
     document.getElementById('current-date').textContent=`${month}/${day}/${year}`;
-    this.workoutDate=`${month}/${day}/${year}`
+    this.workoutDate=`${month}/${day}/${year}`;
+    let elements = document.querySelectorAll('[id^="table-"]');
+    elements.forEach(element=>this.clearTable(element));
+    this.createThisDate()
 }
 addDateListeners(){
   

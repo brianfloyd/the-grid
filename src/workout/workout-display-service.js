@@ -27,23 +27,28 @@ export class WorkoutDisplayService {
      * Gets a workout for a given date.
      */
     async getWorkoutViewForDate(dateString) {
+        console.log(dateString)
         try {
             console.time('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             // TODO: Switch to passing the date when the front end is ready for it.
             console.time('WorkoutDisplayService#getWorkoutForDate');
-            const workout = await this.workoutService.getWorkoutForDate('08/19/2024');
+            const workout = await this.workoutService.getWorkoutForDate(dateString);
+            console.log(workout)
             console.timeEnd('WorkoutDisplayService#getWorkoutForDate');
 
             let workoutView = new WorkoutView(workout);
+           // console.log(workout)
+          
             workoutView.date = dateString;
             console.time('WorkoutDisplayService#populateSets');
             workoutView = await this.populateSets(workoutView, workout);
           
-            console.timeEnd('WorkoutDisplayService#populateSets');
-            console.timeEnd('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
+            // console.timeEnd('WorkoutDisplayService#populateSets');
+            // console.timeEnd('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             return workoutView;
         } catch (e) {
             if (e instanceof ServerError) {
+                
                 throw e;
             }
 
@@ -54,6 +59,7 @@ export class WorkoutDisplayService {
 
     async populateSets(workoutView, workout) {
         let setViews = [];
+     
         for (const set of workout.sets) {
             const setView = new SetView(set);
             setViews.push(setView);
@@ -61,7 +67,7 @@ export class WorkoutDisplayService {
         setViews = await this.populateExercises(setViews);
 
         workoutView.sets = setViews;
-        console.log(workoutView)
+    //console.log(workoutView)
         return workoutView;
     }
 
@@ -70,7 +76,7 @@ export class WorkoutDisplayService {
 
         const exercisesByIds = await this.exerciseService.getExercisesByIds(exerciseIds);
         for (const setView of setViews) {
-            console.log(setView)
+          
             const exercise = exercisesByIds[setView.exerciseId];
             if (exercise) {
                 setView.name = exercise.name;

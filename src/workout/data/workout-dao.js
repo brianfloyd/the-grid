@@ -20,7 +20,7 @@ class WorkoutDataRowMapper {
             workoutData.date = row['wrk_date'];
             data.push(workoutData);
         }
- 
+
         return data;
     }
 

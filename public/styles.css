@@ -302,6 +302,21 @@ td {
 .date-btn:hover {
     background-color: #0056b3;
 }
+#no-data {
+    position: absolute; /* Allows for absolute positioning */
+    top: 50%; /* Centers vertically */
+    left: 50%; /* Centers horizontally */
+    transform: translate(-50%, -50%); /* Adjusts the element back to exact center */
+    background-color: #333; /* Match background color of the date box */
+    color: white; /* Text color to match the date box */
+    padding: 10px 20px; /* Add padding for visual consistency */
+    border-radius: 15px; /* Rounded edges like the date box */
+    font-size: 1.2em; /* Font size to match the date box */
+    text-align: center; /* Center the text inside the box */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: add shadow to match date box */
+    z-index: 1000; /* Ensures it appears above other elements */
+}
+
 
 
 }

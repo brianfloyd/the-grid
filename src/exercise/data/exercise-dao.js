@@ -27,7 +27,7 @@ export class ExerciseDao {
 class ExerciseRowMapper {
 
     static map(result) {
-        console.log(result.rows)
+     
         const exercises = [];
         for (const row of result.rows) {
             // TODO: Make a data model of exercises.
@@ -37,7 +37,7 @@ class ExerciseRowMapper {
             exercise.group = row['exr_group'];
             exercises.push(exercise);
         }
-        console.log(exercises)
+
         return exercises;
     }
 }

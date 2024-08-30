@@ -51,7 +51,7 @@ export class SetService {
             if (!result || result.length === 0) {
                 throw new ServerError(ErrorCode.NOT_FOUND, `Could not find set for id ${id}.`);
             }
-            console.log({result})
+
             return result;
         } catch (e) {
             if (e instanceof ServerError) {
@@ -125,7 +125,7 @@ export class SetService {
     }
 
     validateSet(set) {
-        console.log(set);
+   
         if (!set.workoutId || set.workoutId < 0) {
             throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided workout id was not valid.');
         }
