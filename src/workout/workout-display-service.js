@@ -31,13 +31,14 @@ export class WorkoutDisplayService {
             console.time('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             // TODO: Switch to passing the date when the front end is ready for it.
             console.time('WorkoutDisplayService#getWorkoutForDate');
-            const workout = await this.workoutService.getWorkoutForDate(dateString);
+            const workout = await this.workoutService.getWorkoutForDate('08/19/2024');
             console.timeEnd('WorkoutDisplayService#getWorkoutForDate');
 
             let workoutView = new WorkoutView(workout);
             workoutView.date = dateString;
             console.time('WorkoutDisplayService#populateSets');
             workoutView = await this.populateSets(workoutView, workout);
+          
             console.timeEnd('WorkoutDisplayService#populateSets');
             console.timeEnd('WorkoutDisplayService#TOTAL-getWorkoutViewForDate');
             return workoutView;
@@ -60,6 +61,7 @@ export class WorkoutDisplayService {
         setViews = await this.populateExercises(setViews);
 
         workoutView.sets = setViews;
+        console.log(workoutView)
         return workoutView;
     }
 
@@ -68,6 +70,7 @@ export class WorkoutDisplayService {
 
         const exercisesByIds = await this.exerciseService.getExercisesByIds(exerciseIds);
         for (const setView of setViews) {
+            console.log(setView)
             const exercise = exercisesByIds[setView.exerciseId];
             if (exercise) {
                 setView.name = exercise.name;

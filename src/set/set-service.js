@@ -51,6 +51,7 @@ export class SetService {
             if (!result || result.length === 0) {
                 throw new ServerError(ErrorCode.NOT_FOUND, `Could not find set for id ${id}.`);
             }
+            console.log({result})
             return result;
         } catch (e) {
             if (e instanceof ServerError) {
