@@ -3,11 +3,7 @@ import {WorkoutSet} from "../../model/api/workout-set.js";
 export class SetDao {
 
     static NEXT_SEQUENCE_VALUE = `nextval('the_grid.seq_set_id')`;
-    static SELECT_SET_FOR_ID = `SELECT e.exr_id, e.exr_name, e.exr_group, 
-    r.rep_id, r.rep_exr_id, r.rep_update, r.rep_number, r.rep_weight
-    FROM the_grid.exercise e
-    INNER JOIN the_grid.reps r ON e.exr_id = r.rep_exr_id
-    where e.exr_id= ANY ($1)`;
+    static SELECT_SET_FOR_ID = `SELECT * from the_grid.exercise e where e.exr_id= ANY ($1)`;
     static SELECT_SETS_FOR_WORKOUT = `SELECT 
     s.*, -- Select all columns from the set table
     r.rep_id, r.rep_exr_id, r.rep_update, r.rep_number, r.rep_weight -- Select specific columns from the reps table
@@ -21,6 +17,9 @@ WHERE s.set_wrk_id = $1;
         ' set_count = $5 where set_id = $6';
 
     async getSetForId(client, id) {
+        id =Number(id);
+        console.log(id)
+        console.log(typeof(id))
         const result = await client.query(SetDao.SELECT_SET_FOR_ID, [id]);
         return SetRowMapper.map(result);
     }
@@ -55,7 +54,7 @@ WHERE s.set_wrk_id = $1;
 class SetRowMapper {
 
     static map(result) {
-       // console.log(result.rows)
+       console.log(result.rows)
         const sets = [];
         for (const row of result.rows) {
             // TODO: Make a data model of sets.

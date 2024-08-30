@@ -31,7 +31,7 @@ export class SetViewResource {
      * Path: /set/view/:setId/save
      */
     async saveExistingSet(request, response) {
-        //console.log('request', request.body);
+        console.log('request', request.body);
         const result = await this.setService.updateSet(request.params.setId, request.body);
         return _200(response, result);
     }

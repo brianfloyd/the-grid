@@ -156,9 +156,7 @@ async createGridDayEditor(muscleGroup){
    } 
    if(thisDayExercise==='Date has no data')return;
    for(let ex of thisDayExercise.sets){
-                console.log(thisDayExercise.sets[0].group)
     let buttons = document.querySelectorAll(`#table-${thisDayExercise.sets[0].group} .add-btn`);
-    console.log(buttons)
     buttons.forEach(function(button){
         let exerciseCell=button.parentNode.parentNode.firstChild;
         let exercise = exerciseCell.textContent;
@@ -202,7 +200,7 @@ incrementExcercise(element,data, workoutId){
     incrementColumn.textContent=currentValue;
     console.log(data)
 
-    fetch(`/set/view/${data.id}/save`, {
+    fetch(`/set/view/${Number(data.id)}/save`, {
         method: "POST",
         headers: {
             'Content-Type': "application/json"
@@ -216,6 +214,8 @@ incrementExcercise(element,data, workoutId){
     });
     console.log(JSON.stringify({
         ...data,
+        workoutId,
+        count: currentValue
       
     }))
   
