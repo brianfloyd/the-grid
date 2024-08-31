@@ -17,7 +17,7 @@ export class SetDao {
     ORDER BY rep_update DESC
     LIMIT 1;
     `
-    static INSERT_SET = 'insert into the_grid.set (set_exr_id, set_wrk_id, set_reps, set_weight, set_count)' +
+    static INSERT_SET = 'insert into the_grid.set (set_id,set_exr_id, set_wrk_id, set_reps, set_weight, set_count)' +
         ` values (${SetDao.NEXT_SEQUENCE_VALUE}, $1, $2, $3, $4, $5) returning set_id`;
     static UPDATE_SET = 'update the_grid.set set set_exr_id = $1, set_wrk_id = $2, set_reps = $3, set_weight = $4,' +
         ' set_count = $5 where set_id = $6';
