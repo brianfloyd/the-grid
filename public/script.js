@@ -9,7 +9,7 @@ constructor(){
     try {
                 const response = await fetch(`${api}${param}`);
                 const data = await response.json();
-                console.log(data.errorCode)
+            
                 if(data.errorCode){
                     if(data.errorCode==='NOT_FOUND'  || 'GENERIC_ERROR'){
                         let paramApi = api.split('/').pop();
@@ -89,8 +89,6 @@ async createGrid2(){
 }
 
 async createThisDate(){
-    console.log(this.workoutDate)
-
     const thisDateData= await this.getData(`/workout/view/date/`,this.workoutDate);
     if(thisDateData==='Date has no data'){
         document.getElementById('no-data').classList.remove('hide');
@@ -100,7 +98,7 @@ async createThisDate(){
         document.getElementById('no-data').classList.add('hide')
     }
     for(const excercise of thisDateData.sets){
-        console.log(excercise);
+       
         document.getElementById(`icon-${excercise.group.toLowerCase()}`).classList.add('highlighted')
     const tb = document.getElementById(`table-${excercise.group}`);
     const row = tb.insertRow();
@@ -130,10 +128,11 @@ if(excercise.count===0)count.textContent='';
 async createGridDayEditor(muscleGroup){
     document.getElementById('no-data').classList.add('hide');
    const  exerciseToDisplay = await this.getData(`/exercise/view/group/${muscleGroup}`);
+   console.log({exerciseToDisplay})
    const exerciseMap={};
    exerciseToDisplay.forEach(item=>exerciseMap[item.name]={id:item.id,group:item.group,name:item.name})
    const  thisDayExercise= await this.getData(`/workout/view/date/`,this.workoutDate);
-   console.log(thisDayExercise)
+   console.log(exerciseMap)
    const allGridItems = document.querySelectorAll('[id^="table-"]');
    Array.from(allGridItems).forEach(item => {
     while (item.firstChild) {
@@ -149,7 +148,7 @@ async createGridDayEditor(muscleGroup){
     const buttonElement = start.createElement('button', null, ['add-btn']);
     exerciseCell.textContent = exercise.name;
     buttonElement.innerText = '+';
-    buttonElement.onclick = () => start.editDayExercise(exercise)
+    buttonElement.onclick = () => start.editDayExercise('',exerciseMap[exercise.name],true)
     nextCell.appendChild(buttonElement);
     nextCell.id='button'
    
@@ -168,12 +167,12 @@ async createGridDayEditor(muscleGroup){
         }
         button.parentNode.replaceChild(newButton, button);
         newButton.addEventListener('click',function(){
-            const excerciseToAdd=exercise;
+            const exerciseToAdd=exercise;
             let fn=false;
 
            if(this.textContent==='+')fn=true;
-        
-           start.editDayExercise(thisDayExercise.id,exerciseMap[excerciseToAdd],fn)
+        console.log(exerciseToAdd,exerciseMap[exerciseToAdd])
+           start.editDayExercise(thisDayExercise.id  || "",exerciseMap[exerciseToAdd],fn)
 
 
        })
@@ -182,7 +181,38 @@ async createGridDayEditor(muscleGroup){
 }
 
 editDayExercise(workoutId,exerciseDetails,add){
-    console.log({workoutId},exerciseDetails,add);
+    console.log(workoutId, exerciseDetails,add);
+    fetch(`/set/view/save`, {
+        method: "POST",
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify({
+            "workoutId":workoutId,
+           "exerciseId":exerciseDetails.id,
+           "name":exerciseDetails.name,
+           "group":exerciseDetails.group,
+           "date":this.workoutDate
+          
+        })
+      
+    }).then(response => {
+        if (!response.ok) {
+            // If the response has a status code outside the range of 2xx, throw an error
+            return response.json().then(errorData => {
+                console.error('Error Response:', errorData); // Log the error details from the server
+                throw new Error('Server responded with an error!');
+            });
+        }
+        return response.json(); // If response is okay, parse it as JSON
+    })
+    .then(data => {
+        console.log('Success:', data); // Log the successful response data
+    })
+    .catch(err => {
+        console.error('Fetch Error:', err); // Log any error that occurred during the fetch or response handling
+    });
+    
 
 }
 
@@ -240,7 +270,7 @@ makeEditable(td) {
             input.select();
         }
 iconSelected(element){
-    console.log(element)
+
         if(element.classList.contains('edit-icon')){
             console.log('already selected');
             element.classList.remove('edit-icon');

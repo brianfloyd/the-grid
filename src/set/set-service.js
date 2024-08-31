@@ -68,13 +68,21 @@ export class SetService {
     }
 
     async insertSet(set, client) {
+        console.log(set)
         let dbClient = client;
         try {
-            this.validateSet(set);
+        
+           
+            
             if (!client) {
                 dbClient = await this.databaseClientFactory.obtain();
             }
-
+            let existingWorkout = await transactional(dbClient, async()=>this.setDao.validateWorkoutId(dbClient,set.date))
+            if(existingWorkout)set.workoutId=existingWorkout;
+            else set.workoutId=null;
+            await transactional(dbClient, async()=>this.setDao.getDefaultRepsForExcerciseId(dbClient,set.exerciseId,set))
+           
+           this.validateSet(set);
             return await transactional(dbClient, async () => {
                 const setId = await this.setDao.insertSet(dbClient, set);
                 return await this.getSetForId(setId, dbClient);
@@ -124,9 +132,10 @@ export class SetService {
         }
     }
 
-    validateSet(set) {
-   
+    async validateSet(set) {
+ 
         if (!set.workoutId || set.workoutId < 0) {
+       
             throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided workout id was not valid.');
         }
 
@@ -143,7 +152,7 @@ export class SetService {
         }
 
         if (!set.count || set.count < 0) {
-            throw new ServerError(ErrorCode.INVALID_REQUEST, 'The provided count was not valid.');
+          set.count=0
         }
     }
 
