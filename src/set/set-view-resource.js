@@ -21,7 +21,6 @@ export class SetViewResource {
      * Path: /set/view/save
      */
     async saveNewSet(request, response) {
-        console.log(request.body)
         const result = await this.setService.insertSet(request.body);
         return _200(response, result);
     }
@@ -32,7 +31,6 @@ export class SetViewResource {
      * Path: /set/view/:setId/save
      */
     async saveExistingSet(request, response) {
-        console.log('request', request.body);
         const result = await this.setService.updateSet(request.params.setId, request.body);
         return _200(response, result);
     }

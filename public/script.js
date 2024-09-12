@@ -1,5 +1,3 @@
-
-
 class DOMSETUP {
 
 constructor(){
@@ -139,7 +137,10 @@ async createGridDayEditor(muscleGroup){
         item.removeChild(item.firstChild);
     }
     });
-   for(const exercise of exerciseToDisplay){
+
+   const isTodayNew = thisDayExercise==='Date has no data';
+
+   for (const exercise of exerciseToDisplay){
  
     const tb = document.getElementById(`table-${exercise.group}`);
     const row = tb.insertRow();
@@ -148,54 +149,77 @@ async createGridDayEditor(muscleGroup){
     const buttonElement = start.createElement('button', null, ['add-btn']);
     exerciseCell.textContent = exercise.name;
     buttonElement.innerText = '+';
-    buttonElement.onclick = () => start.editDayExercise('',exerciseMap[exercise.name],true)
+    buttonElement.onclick = () => {
+        if (isTodayNew) {
+            start.saveNewWorkout(this.workoutDate, exercise.id);
+        } else {
+            start.addNewDefaultSetToWorkout(thisDayExercise.id, exercise.id);
+        }
+    }
     nextCell.appendChild(buttonElement);
     nextCell.id='button'
    
-   } 
-   if(thisDayExercise==='Date has no data')return;
+   }
+
+   if (isTodayNew) {
+       return;
+   }
+
    for(let ex of thisDayExercise.sets){
-    let buttons = document.querySelectorAll(`#table-${thisDayExercise.sets[0].group} .add-btn`);
-    buttons.forEach(function(button){
-        let exerciseCell=button.parentNode.parentNode.firstChild;
-        let exercise = exerciseCell.textContent;
-        const newButton = button.cloneNode(true);
-        if(ex.name ===exercise){
-        exerciseCell.classList.add('white-text');
-        newButton.classList.add('included');
-        newButton.innerText='-';
-        }
-        button.parentNode.replaceChild(newButton, button);
-        newButton.addEventListener('click',function(){
-            const exerciseToAdd=exercise;
-            let fn=false;
+        let buttons = document.querySelectorAll(`#table-${thisDayExercise.sets[0].group} .add-btn`);
+        buttons.forEach(function(button){
+            let exerciseCell=button.parentNode.parentNode.firstChild;
+            let exercise = exerciseCell.textContent;
+            const newButton = button.cloneNode(true);
+            if(ex.name === exercise){
+                exerciseCell.classList.add('white-text');
+                newButton.classList.add('included');
+                newButton.innerText='-';
+            }
 
-           if(this.textContent==='+')fn=true;
-        console.log(exerciseToAdd,exerciseMap[exerciseToAdd])
-           start.editDayExercise(thisDayExercise.id  || "",exerciseMap[exerciseToAdd],fn)
-
-
-       })
-    });
-}
+            // TODO: Allow sets to be deleted, right now this event listener was overriding the incorrect elements, so
+            // I commented it out.
+            // button.parentNode.replaceChild(newButton, button);
+            // newButton.addEventListener('click',function(){})
+        });
+    }
 }
 
-editDayExercise(workoutId,exerciseDetails,add){
-    console.log(workoutId, exerciseDetails,add);
-    fetch(`/set/view/save`, {
+addNewDefaultSetToWorkout(workoutId, exerciseId) {
+    fetch(`/workout/view/add-set`, {
         method: "POST",
         headers: {
             'Content-Type': "application/json"
         },
         body: JSON.stringify({
-            "workoutId":workoutId,
-           "exerciseId":exerciseDetails.id,
-           "name":exerciseDetails.name,
-           "group":exerciseDetails.group,
-           "date":this.workoutDate
-          
+            workoutId: workoutId,
+            exerciseId: exerciseId
         })
-      
+    }).then(response => {
+        if (!response.ok) {
+            // If the response has a status code outside the range of 2xx, throw an error
+            return response.json().then(errorData => {
+                console.error('Error Response:', errorData); // Log the error details from the server
+                throw new Error('Server responded with an error!');
+            });
+        }
+        return response.json(); // If response is okay, parse it as JSON
+    })
+    .then(data => {
+        console.log('Success:', data); // Log the successful response data
+    })
+    .catch(err => {
+        console.error('Fetch Error:', err); // Log any error that occurred during the fetch or response handling
+    });
+}
+
+saveNewWorkout(workoutDate, exerciseId){
+    fetch(`/workout/view/save-new/${workoutDate}`, {
+        method: "POST",
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify([exerciseId])
     }).then(response => {
         if (!response.ok) {
             // If the response has a status code outside the range of 2xx, throw an error
@@ -346,7 +370,7 @@ updateDate(){
     let day = this.currentDate.getDate().toString();
     let year = this.currentDate.getFullYear();
     document.getElementById('current-date').textContent=`${month}/${day}/${year}`;
-    this.workoutDate=`${month}/${day}/${year}`;
+    this.workoutDate=`${month}-${day}-${year}`;
     let elements = document.querySelectorAll('[id^="table-"]');
     elements.forEach(element=>this.clearTable(element));
     this.createThisDate()
@@ -381,5 +405,3 @@ start.updateDate();
 start.addDateListeners();
 start.createGrid2();
 start.createThisDate();
-
-

@@ -26,6 +26,38 @@ export class WorkoutService {
         this.setService = setService;
     }
 
+    async createWorkoutForDate(dateString, client) {
+        let dbClient = client;
+        try {
+            if (!client) {
+                dbClient = await this.databaseClientFactory.obtain();
+            }
+
+            if (!isValidDateString(dateString)) {
+                throw new ServerError(ErrorCode.INVALID_REQUEST, 'Provided string is not a valid date.');
+            }
+
+            const data = await this.workoutDao.getWorkoutForDate(dbClient, dateString);
+            if (data && data.length !== 0) {
+                throw new ServerError(ErrorCode.INVALID_REQUEST, 'A workout already exists for the given date.');
+            }
+
+            const dateKey = convertDateToYYYYMMDD(new Date(Date.parse(dateString)));
+            return await this.workoutDao.insertWorkoutForDate(dbClient, dateKey);
+        } catch (e) {
+            if (e instanceof ServerError) {
+                throw e;
+            }
+
+            console.error("An unexpected error occurred while creating a workout for today.", e);
+            throw new ServerError(ErrorCode.GENERIC_ERROR, e.message);
+        } finally {
+            if (!client && dbClient) {
+                dbClient.release();
+            }
+        }
+    }
+
     async getWorkoutForDate(dateString, client) {
         let dbClient = client;
         try {

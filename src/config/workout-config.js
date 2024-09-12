@@ -6,7 +6,7 @@ import {WorkoutDao} from "../workout/data/workout-dao.js";
 export function configureWorkoutObjects(dbClientFactory, exerciseService, setService) {
     const workoutDao = new WorkoutDao();
     const workoutService = new WorkoutService(dbClientFactory, workoutDao, setService);
-    const workoutDisplayService = new WorkoutDisplayService(workoutService, exerciseService);
+    const workoutDisplayService = new WorkoutDisplayService(workoutService, setService, exerciseService, dbClientFactory);
     const workoutViewResource = new WorkoutViewResource(workoutDisplayService);
 
     return {
