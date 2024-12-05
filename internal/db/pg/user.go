@@ -5,13 +5,23 @@ import (
 	"github.com/google/uuid"
 )
 
+type UserQueries struct {
+	db DbConnection
+}
+
+func NewUserQueries(conn DbConnection) *UserQueries {
+	return &UserQueries{
+		db: conn,
+	}
+}
+
 type User struct {
-	q *Queries
+	q *UserQueries
 }
 
 func NewUser(conn DbConnection) *User {
 	return &User{
-		q: New(conn),
+		q: NewUserQueries(conn),
 	}
 }
 
@@ -40,4 +50,12 @@ func (u *User) ByName(name string) (internal.User, error) {
 		return internal.User{}, err
 	}
 	return user, nil
+}
+
+func (u *User) List() ([]internal.User, error) {
+	users, err := u.q.List()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

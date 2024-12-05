@@ -18,11 +18,17 @@ type DbConnection interface {
 }
 
 func New(db DbConnection) *Queries {
-	return &Queries{db: db}
+	return &Queries{
+		db:      db,
+		workout: WorkoutQueries{},
+		user:    UserQueries{},
+	}
 }
 
 type Queries struct {
-	db DbConnection
+	db      DbConnection
+	workout WorkoutQueries
+	user    UserQueries
 }
 
 type PGSslMode string

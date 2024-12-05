@@ -9,11 +9,13 @@ import (
 )
 
 type UserService interface {
+	List() ([]internal.User, error)
 	ById(id string) (internal.User, error)
 	Create(user internal.User) (internal.User, error)
 }
 
 type UserRepository interface {
+	List() ([]internal.User, error)
 	ById(id string) (internal.User, error)
 	ByName(name string) (internal.User, error)
 	Create(user internal.User) (internal.User, error)
@@ -53,9 +55,17 @@ func (u *User) Create(user internal.User) (internal.User, error) {
 
 	createdUser, err := u.repo.Create(user)
 	if err != nil {
-		return internal.User{}, &internal.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}
+		return internal.User{}, errors.Join(&internal.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}, err)
 	}
 	return createdUser, nil
+}
+
+func (u *User) List() ([]internal.User, error) {
+	users, err := u.repo.List()
+	if err != nil {
+		return nil, errors.Join(&internal.GenericUserError{Message: "An error occurred while listing users"}, err)
+	}
+	return users, nil
 }
 
 func (u *User) doesUserExistByName(name string) (bool, error) {

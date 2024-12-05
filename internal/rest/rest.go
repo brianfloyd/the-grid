@@ -1,10 +1,13 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
 )
+
+const uuidRegEx string = `[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}`
 
 var (
 	GenericError = ErrorCode{Name: "GENERIC_ERROR", Status: 500}
@@ -23,7 +26,9 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-func renderErrorResponse(w http.ResponseWriter, r *http.Request, errorCode ErrorCode, message string) {
+func renderErrorResponse(w http.ResponseWriter, r *http.Request, errorCode ErrorCode, message string, e error) {
+	fmt.Printf("ERROR [%s] %s - %v\n", errorCode.Name, message, e)
+
 	response := ErrorResponse{
 		Code:    errorCode.Name,
 		Status:  errorCode.Status,

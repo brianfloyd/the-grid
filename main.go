@@ -19,15 +19,30 @@ func main() {
 	}
 
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
+	router.Use(middleware.RequestID, middleware.Logger, middleware.Recoverer)
 
-	setupUser(pool, router)
+	userSvc := setupUser(pool, router)
+	setupWorkout(pool, router, userSvc)
+
+	fs := http.FileServer(http.Dir("static/"))
+	router.Handle("/static/*", http.StripPrefix("/static/", fs))
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/index.html")
+	})
 
 	http.ListenAndServe(conf.LoadServerAddress(), router)
 }
 
-func setupUser(pool *pgxpool.Pool, router *chi.Mux) {
+func setupUser(pool *pgxpool.Pool, router *chi.Mux) service.UserService {
 	userRepo := pg.NewUser(pool)
 	userSvc := service.NewUser(userRepo)
 	rest.NewUserHandler(userSvc).Register(router)
+	return userSvc
+}
+
+func setupWorkout(pool *pgxpool.Pool, router *chi.Mux, userSvc service.UserService) service.WorkoutService {
+	workoutRepo := pg.NewWorkout(pool)
+	workoutSvc := service.NewWorkout(workoutRepo, userSvc)
+	rest.NewWorkoutHandler(workoutSvc).Register(router)
+	return workoutSvc
 }
