@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/brianfloyd/the-grid/internal"
 	"github.com/brianfloyd/the-grid/internal/db"
+	m "github.com/brianfloyd/the-grid/internal/model"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -37,18 +37,18 @@ type InsertSetParams struct {
 	count      uint64
 }
 
-func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (internal.Workout, error) {
+func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (m.Workout, error) {
 	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
 		AccessMode: pgx.ReadWrite,
 	})
 	if err != nil {
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 
 	workout, err := scanWorkout(tx.QueryRow(context.TODO(), InsertWorkout, args.id, args.userId, args.date))
 	if err != nil {
 		tx.Rollback(context.TODO())
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 
 	batch := &pgx.Batch{}
@@ -58,17 +58,17 @@ func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (internal.Worko
 	results := tx.SendBatch(context.TODO(), batch)
 	defer results.Close()
 
-	sets := []internal.Set{}
+	sets := []m.Set{}
 	for i := 0; i < len(args.sets); i++ {
 		rows, err := results.Query()
 		if err != nil {
 			tx.Rollback(context.TODO())
-			return internal.Workout{}, err
+			return m.Workout{}, err
 		}
 		scannedSets, err := scanSets(rows)
 		if err != nil {
 			tx.Rollback(context.TODO())
-			return internal.Workout{}, err
+			return m.Workout{}, err
 		}
 		sets = append(sets, scannedSets...)
 	}
@@ -77,7 +77,7 @@ func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (internal.Worko
 	err = results.Close()
 	if err != nil {
 		tx.Rollback(context.TODO())
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 
 	tx.Commit(context.TODO())
@@ -97,29 +97,29 @@ type ByDateParams struct {
 	date   string
 }
 
-func (q *WorkoutQueries) ByDate(args ByDateParams) (internal.Workout, error) {
+func (q *WorkoutQueries) ByDate(args ByDateParams) (m.Workout, error) {
 	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 	if err != nil {
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 
 	workout, err := scanWorkout(tx.QueryRow(context.TODO(), SelectWorkoutByDate, args.userId, args.date))
 	if err != nil {
 		tx.Rollback(context.TODO())
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 
 	rows, err := tx.Query(context.TODO(), SelectSetsByWorkoutId, workout.Id)
 	if err != nil {
 		tx.Rollback(context.TODO())
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 	sets, err := scanSets(rows)
 	if err != nil {
 		tx.Rollback(context.TODO())
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 	workout.Sets = sets
 
@@ -136,7 +136,7 @@ type DatabaseWorkout struct {
 	modifiedAt time.Time
 }
 
-func scanWorkout(row pgx.Row) (internal.Workout, error) {
+func scanWorkout(row pgx.Row) (m.Workout, error) {
 	dto := DatabaseWorkout{}
 	err := row.Scan(
 		&dto.id,
@@ -147,13 +147,13 @@ func scanWorkout(row pgx.Row) (internal.Workout, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return internal.Workout{}, db.ErrDbNotFound
+			return m.Workout{}, db.ErrDbNotFound
 		} else {
-			return internal.Workout{}, errors.Join(db.ErrDbGeneric, err)
+			return m.Workout{}, errors.Join(db.ErrDbGeneric, err)
 		}
 	}
 
-	return internal.Workout{
+	return m.Workout{
 		Id:         dto.id,
 		UserId:     dto.userId,
 		Date:       dto.date.Format("01/02/2006"),
@@ -162,10 +162,10 @@ func scanWorkout(row pgx.Row) (internal.Workout, error) {
 	}, nil
 }
 
-func scanSets(rows pgx.Rows) ([]internal.Set, error) {
-	var sets []internal.Set
+func scanSets(rows pgx.Rows) ([]m.Set, error) {
+	var sets []m.Set
 	for rows.Next() {
-		set := internal.Set{}
+		set := m.Set{}
 		err := rows.Scan(
 			&set.Id,
 			&set.WorkoutId,

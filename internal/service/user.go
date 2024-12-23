@@ -4,21 +4,21 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/brianfloyd/the-grid/internal"
 	"github.com/brianfloyd/the-grid/internal/db"
+	m "github.com/brianfloyd/the-grid/internal/model"
 )
 
 type UserService interface {
-	List() ([]internal.User, error)
-	ById(id string) (internal.User, error)
-	Create(user internal.User) (internal.User, error)
+	List() ([]m.User, error)
+	ById(id string) (m.User, error)
+	Create(user m.User) (m.User, error)
 }
 
 type UserRepository interface {
-	List() ([]internal.User, error)
-	ById(id string) (internal.User, error)
-	ByName(name string) (internal.User, error)
-	Create(user internal.User) (internal.User, error)
+	List() ([]m.User, error)
+	ById(id string) (m.User, error)
+	ByName(name string) (m.User, error)
+	Create(user m.User) (m.User, error)
 }
 
 type User struct {
@@ -31,39 +31,39 @@ func NewUser(repo UserRepository) *User {
 	}
 }
 
-func (u *User) ById(id string) (internal.User, error) {
+func (u *User) ById(id string) (m.User, error) {
 	user, err := u.repo.ById(id)
 	if err != nil {
 		if errors.Is(err, db.ErrDbNotFound) {
-			return internal.User{}, &internal.UserNotFoundError{Message: "Could not find user by the given id."}
+			return m.User{}, &m.UserNotFoundError{Message: "Could not find user by the given id."}
 		} else {
-			return internal.User{}, &internal.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}
+			return m.User{}, &m.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}
 		}
 	}
 	return user, nil
 }
 
-func (u *User) Create(user internal.User) (internal.User, error) {
+func (u *User) Create(user m.User) (m.User, error) {
 	exists, err := u.doesUserExistByName(user.Name)
 	if err != nil {
-		return internal.User{}, &internal.GenericUserError{Message: "Could not verify if the user already exists."}
+		return m.User{}, &m.GenericUserError{Message: "Could not verify if the user already exists."}
 	}
 
 	if exists {
-		return internal.User{}, &internal.UserExistsError{Message: fmt.Sprintf("User with the name %s already exists.", user.Name)}
+		return m.User{}, &m.UserExistsError{Message: fmt.Sprintf("User with the name %s already exists.", user.Name)}
 	}
 
 	createdUser, err := u.repo.Create(user)
 	if err != nil {
-		return internal.User{}, errors.Join(&internal.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}, err)
+		return m.User{}, errors.Join(&m.GenericUserError{Message: "An unexpected exception occurred while performing the user operation."}, err)
 	}
 	return createdUser, nil
 }
 
-func (u *User) List() ([]internal.User, error) {
+func (u *User) List() ([]m.User, error) {
 	users, err := u.repo.List()
 	if err != nil {
-		return nil, errors.Join(&internal.GenericUserError{Message: "An error occurred while listing users"}, err)
+		return nil, errors.Join(&m.GenericUserError{Message: "An error occurred while listing users"}, err)
 	}
 	return users, nil
 }

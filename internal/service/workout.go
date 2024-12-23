@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/brianfloyd/the-grid/internal"
 	"github.com/brianfloyd/the-grid/internal/db"
+	m "github.com/brianfloyd/the-grid/internal/model"
 )
 
 type WorkoutService interface {
-	ById(id string) (internal.Workout, error)
-	ByDate(userId string, date string) (internal.Workout, error)
-	Create(userId string, workout internal.Workout) (internal.Workout, error)
-	CreateSet(workoutId string, set internal.Set) (internal.Set, error)
-	UpdateSet(workoutId string, setId string, set internal.Set) (internal.Set, error)
+	ById(id string) (m.Workout, error)
+	ByDate(userId string, date string) (m.Workout, error)
+	Create(userId string, workout m.Workout) (m.Workout, error)
+	CreateSet(workoutId string, set m.Set) (m.Set, error)
+	UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error)
 	DeleteSet(workoutId string, setId string) error
 }
 
 type WorkoutRespository interface {
-	ByDate(userId string, date string) (internal.Workout, error)
-	Create(userId string, workout internal.Workout) (internal.Workout, error)
+	ByDate(userId string, date string) (m.Workout, error)
+	Create(userId string, workout m.Workout) (m.Workout, error)
 }
 
 type Workout struct {
@@ -35,31 +35,31 @@ func NewWorkout(repo WorkoutRespository, userSvc UserService) *Workout {
 	}
 }
 
-func (w *Workout) Create(userId string, workout internal.Workout) (internal.Workout, error) {
+func (w *Workout) Create(userId string, workout m.Workout) (m.Workout, error) {
 	date, err := sanitizeDate(workout.Date)
 	if err != nil {
-		return internal.Workout{}, &internal.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
+		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
 	}
 
 	exists, err := w.doesWorkoutExistForDate(userId, date)
 	if err != nil {
-		return internal.Workout{}, errors.Join(&internal.GenericWorkoutError{
+		return m.Workout{}, errors.Join(&m.GenericWorkoutError{
 			Message: "Could not verify if the workout already exists for the given date.",
 		}, err)
 	}
 
 	if exists {
-		return internal.Workout{}, &internal.WorkoutAlreadyExsitsError{Message: fmt.Sprintf("Workout with the date %s already exists.", workout.Date)}
+		return m.Workout{}, &m.WorkoutAlreadyExsitsError{Message: fmt.Sprintf("Workout with the date %s already exists.", workout.Date)}
 	}
 
 	_, err = w.userSvc.ById(userId)
 	if err != nil {
-		var userNotFoundError = &internal.UserNotFoundError{}
+		var userNotFoundError = &m.UserNotFoundError{}
 
 		if errors.As(err, &userNotFoundError) {
-			return internal.Workout{}, &internal.WorkoutInvalidInputError{Message: fmt.Sprintf("The user with id %s does not exist.", userId)}
+			return m.Workout{}, &m.WorkoutInvalidInputError{Message: fmt.Sprintf("The user with id %s does not exist.", userId)}
 		} else {
-			return internal.Workout{}, &internal.GenericWorkoutError{Message: "Could not verify if the user exists."}
+			return m.Workout{}, &m.GenericWorkoutError{Message: "Could not verify if the user exists."}
 		}
 	}
 
@@ -67,42 +67,42 @@ func (w *Workout) Create(userId string, workout internal.Workout) (internal.Work
 
 	createdWorkout, err := w.repo.Create(userId, workout)
 	if err != nil {
-		return internal.Workout{}, errors.Join(&internal.GenericWorkoutError{Message: "An unexpected exception occurred while creating a workout."}, err)
+		return m.Workout{}, errors.Join(&m.GenericWorkoutError{Message: "An unexpected exception occurred while creating a workout."}, err)
 	}
 
 	return createdWorkout, nil
 }
 
-func (w *Workout) ById(id string) (internal.Workout, error) {
-	return internal.Workout{}, nil
+func (w *Workout) ById(id string) (m.Workout, error) {
+	return m.Workout{}, nil
 }
 
-func (w *Workout) ByDate(userId string, dateString string) (internal.Workout, error) {
+func (w *Workout) ByDate(userId string, dateString string) (m.Workout, error) {
 	date, err := sanitizeDate(dateString)
 	if err != nil {
-		return internal.Workout{}, &internal.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
+		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
 	}
 
 	workout, err := w.repo.ByDate(userId, makeDateStringFromTime(date))
 	if err != nil {
-		workoutNotFoundError := &internal.WorkoutNotFoundError{}
+		workoutNotFoundError := &m.WorkoutNotFoundError{}
 
 		if errors.As(err, &workoutNotFoundError) {
-			return internal.Workout{}, &internal.WorkoutNotFoundError{Message: "Workout not found for the given user and date."}
+			return m.Workout{}, &m.WorkoutNotFoundError{Message: "Workout not found for the given user and date."}
 		} else {
-			return internal.Workout{}, errors.Join(&internal.GenericWorkoutError{Message: "Generic workout error."}, err)
+			return m.Workout{}, errors.Join(&m.GenericWorkoutError{Message: "Generic workout error."}, err)
 		}
 	}
 
 	return workout, nil
 }
 
-func (w *Workout) CreateSet(workoutId string, set internal.Set) (internal.Set, error) {
-	return internal.Set{}, nil
+func (w *Workout) CreateSet(workoutId string, set m.Set) (m.Set, error) {
+	return m.Set{}, nil
 }
 
-func (w *Workout) UpdateSet(workoutId string, setId string, set internal.Set) (internal.Set, error) {
-	return internal.Set{}, nil
+func (w *Workout) UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error) {
+	return m.Set{}, nil
 }
 
 func (w *Workout) DeleteSet(workoutId string, setId string) error {

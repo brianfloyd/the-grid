@@ -1,7 +1,7 @@
 package pg
 
 import (
-	"github.com/brianfloyd/the-grid/internal"
+	m "github.com/brianfloyd/the-grid/internal/model"
 	"github.com/google/uuid"
 )
 
@@ -25,7 +25,7 @@ func NewWorkout(conn DbConnection) *Workout {
 	}
 }
 
-func (w *Workout) Create(userId string, params internal.Workout) (internal.Workout, error) {
+func (w *Workout) Create(userId string, params m.Workout) (m.Workout, error) {
 	workoutId := uuid.NewString()
 
 	insertSetParams := make([]InsertSetParams, len(params.Sets))
@@ -48,19 +48,19 @@ func (w *Workout) Create(userId string, params internal.Workout) (internal.Worko
 	})
 
 	if err != nil {
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 	return workout, nil
 }
 
-func (w *Workout) ByDate(userId string, date string) (internal.Workout, error) {
+func (w *Workout) ByDate(userId string, date string) (m.Workout, error) {
 	workout, err := w.q.ByDate(ByDateParams{
 		userId: userId,
 		date:   date,
 	})
 
 	if err != nil {
-		return internal.Workout{}, err
+		return m.Workout{}, err
 	}
 	return workout, nil
 }
