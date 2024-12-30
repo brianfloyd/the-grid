@@ -2,13 +2,13 @@ package rest
 
 import "time"
 
-type Exercise struct {
+type ExerciseResponse struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	Group string `json:"group"`
 }
 
-type Set struct {
+type SetResponse struct {
 	Id         string `json:"id"`
 	ExerciseId string `json:"exerciseId"`
 	Weight     uint64 `json:"weight"`
@@ -16,16 +16,15 @@ type Set struct {
 	Count      uint64 `json:"count"`
 }
 
-type Workout struct {
-	Id         string    `json:"id"`
-	UserId     string    `json:"userId"`
-	Date       string    `json:"date"`
-	Sets       []Set     `json:"sets"`
-	CreatedAt  time.Time `json:"createdAt"`
-	ModifiedAt time.Time `json:"modifiedAt"`
+type WorkoutResponse struct {
+	Id         string        `json:"id"`
+	UserId     string        `json:"userId"`
+	Date       string        `json:"date"`
+	Sets       []SetResponse `json:"sets"`
+	CreatedAt  time.Time     `json:"createdAt"`
+	ModifiedAt time.Time     `json:"modifiedAt"`
 }
 
-// Begin request/response
 type CreateWorkoutSet struct {
 	ExerciseId string `json:"exerciseId"`
 	Weight     uint64 `json:"weight"`
@@ -40,11 +39,11 @@ type CreateWorkoutRequest struct {
 }
 
 type GetWorkoutByIdResponse struct {
-	Workout Workout `json:"workout"`
+	Workout WorkoutResponse `json:"workout"`
 }
 
 type CreateWorkoutResponse struct {
-	Workout Workout `json:"workout"`
+	Workout WorkoutResponse `json:"workout"`
 }
 
 type GetWorkoutByDateRequest struct {
@@ -53,7 +52,7 @@ type GetWorkoutByDateRequest struct {
 }
 
 type GetWorkoutByDateResponse struct {
-	Workout Workout `json:"workout"`
+	Workout WorkoutResponse `json:"workout"`
 }
 
 type CreateSetRequest struct {
@@ -63,7 +62,7 @@ type CreateSetRequest struct {
 }
 
 type CreateSetResponse struct {
-	Set Set `json:"set"`
+	Set SetResponse `json:"set"`
 }
 
 type UpdateSetRequest struct {
@@ -73,5 +72,5 @@ type UpdateSetRequest struct {
 }
 
 type UpdateSetResponse struct {
-	Set Set `json:"set"`
+	Set SetResponse `json:"set"`
 }

@@ -184,8 +184,8 @@ func (h *WorkoutHandler) deleteSet(w http.ResponseWriter, r *http.Request) {
 	renderResponse(w, r, "ok", http.StatusOK)
 }
 
-func convertModelSetToResponseSet(set m.Set) rm.Set {
-	return rm.Set{
+func convertModelSetToResponseSet(set m.Set) rm.SetResponse {
+	return rm.SetResponse{
 		Id:         set.Id,
 		ExerciseId: set.ExerciseId,
 		Weight:     set.Weight,
@@ -211,8 +211,8 @@ func convertCreateWorkoutRequestToModelWorkout(request rm.CreateWorkoutRequest) 
 	}
 }
 
-func convertModelWorkoutToResponseWorkout(workout m.Workout) rm.Workout {
-	return rm.Workout{
+func convertModelWorkoutToResponseWorkout(workout m.Workout) rm.WorkoutResponse {
+	return rm.WorkoutResponse{
 		Id:         workout.Id,
 		UserId:     workout.UserId,
 		Date:       workout.Date,
@@ -222,8 +222,8 @@ func convertModelWorkoutToResponseWorkout(workout m.Workout) rm.Workout {
 	}
 }
 
-func convertSetToResponseSet(mSets []m.Set) []rm.Set {
-	sets := make([]rm.Set, len(mSets))
+func convertSetToResponseSet(mSets []m.Set) []rm.SetResponse {
+	sets := make([]rm.SetResponse, len(mSets))
 	for idx, set := range mSets {
 		sets[idx] = convertModelSetToResponseSet(set)
 	}

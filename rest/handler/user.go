@@ -58,7 +58,7 @@ func (u *UserHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	renderResponse(w, r,
 		&rm.CreateUserResponse{
-			User: rm.User{
+			User: rm.UserResponse{
 				Id:        user.Id,
 				Name:      user.Name,
 				CreatedAt: user.CreatedAt,
@@ -95,7 +95,7 @@ func (u *UserHandler) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := make([]rm.User, len(mUsers))
+	users := make([]rm.UserResponse, len(mUsers))
 	for i, iu := range mUsers {
 		users[i] = convertModelUserToResponseUser(iu)
 	}
@@ -105,8 +105,8 @@ func (u *UserHandler) list(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
-func convertModelUserToResponseUser(user m.User) rm.User {
-	return rm.User{
+func convertModelUserToResponseUser(user m.User) rm.UserResponse {
+	return rm.UserResponse{
 		Id:        user.Id,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
