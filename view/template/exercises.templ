@@ -1,0 +1,18 @@
+package template
+
+import (
+	"strconv"
+	m "github.com/brianfloyd/the-grid/view/model"
+)
+
+templ Exercise(e m.ExerciseView) {
+	<div data-id={strconv.Itoa(e.Id)} data-name={e.Name}>
+		<image src={e.ImageUrl}></image>
+	</div>
+}
+
+templ ExercisesTemplate(exercises []m.ExerciseView) {
+	for _, e := range exercises {
+		@Exercise(e)
+	}
+}

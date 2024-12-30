@@ -9,7 +9,7 @@ import (
 	m "github.com/brianfloyd/the-grid/internal/model"
 )
 
-type WorkoutService interface {
+type IWorkoutService interface {
 	ById(id string) (m.Workout, error)
 	ByDate(userId string, date string) (m.Workout, error)
 	Create(userId string, workout m.Workout) (m.Workout, error)
@@ -23,19 +23,19 @@ type WorkoutRespository interface {
 	Create(userId string, workout m.Workout) (m.Workout, error)
 }
 
-type Workout struct {
+type WorkoutService struct {
 	repo    WorkoutRespository
-	userSvc UserService
+	userSvc IUserService
 }
 
-func NewWorkout(repo WorkoutRespository, userSvc UserService) *Workout {
-	return &Workout{
+func NewWorkoutService(repo WorkoutRespository, userSvc IUserService) *WorkoutService {
+	return &WorkoutService{
 		repo:    repo,
 		userSvc: userSvc,
 	}
 }
 
-func (w *Workout) Create(userId string, workout m.Workout) (m.Workout, error) {
+func (w *WorkoutService) Create(userId string, workout m.Workout) (m.Workout, error) {
 	date, err := sanitizeDate(workout.Date)
 	if err != nil {
 		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
@@ -73,11 +73,11 @@ func (w *Workout) Create(userId string, workout m.Workout) (m.Workout, error) {
 	return createdWorkout, nil
 }
 
-func (w *Workout) ById(id string) (m.Workout, error) {
+func (w *WorkoutService) ById(id string) (m.Workout, error) {
 	return m.Workout{}, nil
 }
 
-func (w *Workout) ByDate(userId string, dateString string) (m.Workout, error) {
+func (w *WorkoutService) ByDate(userId string, dateString string) (m.Workout, error) {
 	date, err := sanitizeDate(dateString)
 	if err != nil {
 		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
@@ -97,19 +97,19 @@ func (w *Workout) ByDate(userId string, dateString string) (m.Workout, error) {
 	return workout, nil
 }
 
-func (w *Workout) CreateSet(workoutId string, set m.Set) (m.Set, error) {
+func (w *WorkoutService) CreateSet(workoutId string, set m.Set) (m.Set, error) {
 	return m.Set{}, nil
 }
 
-func (w *Workout) UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error) {
+func (w *WorkoutService) UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error) {
 	return m.Set{}, nil
 }
 
-func (w *Workout) DeleteSet(workoutId string, setId string) error {
+func (w *WorkoutService) DeleteSet(workoutId string, setId string) error {
 	return nil
 }
 
-func (w *Workout) doesWorkoutExistForDate(userId string, date time.Time) (bool, error) {
+func (w *WorkoutService) doesWorkoutExistForDate(userId string, date time.Time) (bool, error) {
 	dateStr := makeDateStringFromTime(date)
 
 	_, err := w.repo.ByDate(userId, dateStr)

@@ -3,6 +3,7 @@ module github.com/brianfloyd/the-grid
 go 1.23.2
 
 require (
+	github.com/a-h/templ v0.2.793 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/go-chi/chi v1.5.5 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect

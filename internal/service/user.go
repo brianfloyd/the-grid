@@ -8,7 +8,7 @@ import (
 	m "github.com/brianfloyd/the-grid/internal/model"
 )
 
-type UserService interface {
+type IUserService interface {
 	List() ([]m.User, error)
 	ById(id string) (m.User, error)
 	Create(user m.User) (m.User, error)
@@ -21,17 +21,17 @@ type UserRepository interface {
 	Create(user m.User) (m.User, error)
 }
 
-type User struct {
+type UserService struct {
 	repo UserRepository
 }
 
-func NewUser(repo UserRepository) *User {
-	return &User{
+func NewUserService(repo UserRepository) *UserService {
+	return &UserService{
 		repo: repo,
 	}
 }
 
-func (u *User) ById(id string) (m.User, error) {
+func (u *UserService) ById(id string) (m.User, error) {
 	user, err := u.repo.ById(id)
 	if err != nil {
 		if errors.Is(err, db.ErrDbNotFound) {
@@ -43,7 +43,7 @@ func (u *User) ById(id string) (m.User, error) {
 	return user, nil
 }
 
-func (u *User) Create(user m.User) (m.User, error) {
+func (u *UserService) Create(user m.User) (m.User, error) {
 	exists, err := u.doesUserExistByName(user.Name)
 	if err != nil {
 		return m.User{}, &m.GenericUserError{Message: "Could not verify if the user already exists."}
@@ -60,7 +60,7 @@ func (u *User) Create(user m.User) (m.User, error) {
 	return createdUser, nil
 }
 
-func (u *User) List() ([]m.User, error) {
+func (u *UserService) List() ([]m.User, error) {
 	users, err := u.repo.List()
 	if err != nil {
 		return nil, errors.Join(&m.GenericUserError{Message: "An error occurred while listing users"}, err)
@@ -68,7 +68,7 @@ func (u *User) List() ([]m.User, error) {
 	return users, nil
 }
 
-func (u *User) doesUserExistByName(name string) (bool, error) {
+func (u *UserService) doesUserExistByName(name string) (bool, error) {
 	_, err := u.repo.ByName(name)
 
 	if err == nil {
