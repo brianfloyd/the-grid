@@ -1,0 +1,24 @@
+package template
+
+import "fmt"
+
+templ Head(css []string) {
+    <head>
+        <title>The Grid</title>
+        <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        for _, c := range css {
+            <link rel="stylesheet" href={fmt.Sprintf("/static/css/%s", c)}></link>
+        }
+    </head>
+}
+
+
+templ App() {
+    <html>
+        @Head([]string{"exercises.css"})
+        <body>
+            <div hx-get="/_t/exercises" hx-swap="outerHTML" hx-trigger="load"></div>
+            <div id="content"></div>
+        </body>
+    </html>
+}

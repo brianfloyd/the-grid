@@ -1,0 +1,29 @@
+package template
+
+import (
+    "fmt"
+    m "github.com/brianfloyd/the-grid/view/model"
+)
+
+templ user(user m.UserView) {
+    <div class="user-select" data-id={user.Id} hx-trigger="click" hx-post={string(templ.URL(fmt.Sprintf("/login/%s", user.Id)))}>
+        <h3>{user.Name}</h3>
+    </div>
+}
+
+templ users(users []m.UserView) {
+    <div class="user-container">
+        for _, u := range users {
+            @user(u)
+        }
+    </div>
+}
+
+templ LoginPage(u []m.UserView) {
+    <html>
+        @Head([]string{"user.css"})
+        <body>
+            @users(u) 
+        </body>
+    </html>
+}

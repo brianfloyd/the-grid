@@ -25,13 +25,12 @@ func main() {
 
 	userSvc := setupUser(pool, router)
 	setupWorkout(pool, router, userSvc)
-	setupWorkoutViewService(router)
+	setupExerciseViewService(router)
+	loginViewService := setupLoginViewService(router, userSvc)
+	setupAppViewHandler(router, loginViewService)
 
 	fs := http.FileServer(http.Dir("static/"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
-	})
 
 	http.ListenAndServe(conf.LoadServerAddress(), router)
 }
@@ -50,8 +49,18 @@ func setupWorkout(pool *pgxpool.Pool, router *chi.Mux, userSvc is.IUserService) 
 	return workoutSvc
 }
 
-func setupWorkoutViewService(router *chi.Mux) vs.IWorkoutViewService {
-	workoutViewService := vs.NewWorkoutViewService()
-	vh.NewWorkoutViewHandler(workoutViewService).Register(router)
-	return workoutViewService
+func setupExerciseViewService(router *chi.Mux) vs.IExerciseViewService {
+	exerciseViewService := vs.NewExerciseViewService()
+	vh.NewExerciseViewHandler(exerciseViewService).Register(router)
+	return exerciseViewService
+}
+
+func setupLoginViewService(router *chi.Mux, userService is.IUserService) vs.ILoginViewService {
+	loginViewService := vs.NewLoginViewService(userService)
+	vh.NewLoginViewHandler(loginViewService).Register(router)
+	return loginViewService
+}
+
+func setupAppViewHandler(router *chi.Mux, loginViewService vs.ILoginViewService) {
+	vh.NewAppViewHandler(loginViewService).Register(router)
 }
