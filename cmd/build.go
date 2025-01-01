@@ -88,7 +88,7 @@ func main() {
 	}
 
 	fmt.Println("Building application.")
-	cmd, err = runCommand(gopath, "build")
+	cmd, err = runCommand(gopath, "build", "-o", "the-grid", "cmd/main.go")
 	if err != nil {
 		return
 	}
