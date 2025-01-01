@@ -6,7 +6,7 @@ import (
 )
 
 templ GetExerciseGroups(groupViews []m.ExerciseGroupView) {
-	<div class="exercise-group-container">
+	<div class="border-2 border-black-500 flex flex-wrap">
 		for _, groupView := range groupViews {
 			@exerciseGroup(groupView, false)
 		}
@@ -28,7 +28,7 @@ templ SelectedExerciseGroup(groupViews []m.ExerciseGroupView, exercises []m.Exer
 
 templ exerciseGroup(g m.ExerciseGroupView, oob bool) {
 	<!-- TODO: Render the workout for the day if g.Selected is true. -->
-	<div data-name={g.Name} class={"exercise-group", templ.KV("exercise-group-selected", g.Selected)}
+	<div data-name={g.Name} class={"border-2 border-red-500", templ.KV("border-4 border-yellow-500", g.Selected)}
 			if oob {
 				hx-swap-oob={fmt.Sprintf("outerHTML:[data-name=%s]", g.Name)}
 			}

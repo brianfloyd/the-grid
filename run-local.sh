@@ -1,3 +1,3 @@
-~/go/bin/templ generate && go build
+go run cmd/build.go
 source ~/the-grid/env 
-go run main.go
+./the-grid

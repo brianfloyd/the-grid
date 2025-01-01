@@ -6,13 +6,13 @@ import (
 )
 
 templ user(user m.UserView) {
-    <div class="user-select" data-id={user.Id} hx-trigger="click" hx-post={string(templ.URL(fmt.Sprintf("/login/%s", user.Id)))}>
+    <div class="border-2 border-red-500 m-[5px] p-[5px] cursor-pointer" data-id={user.Id} hx-trigger="click" hx-post={string(templ.URL(fmt.Sprintf("/login/%s", user.Id)))}>
         <h3>{user.Name}</h3>
     </div>
 }
 
 templ users(users []m.UserView) {
-    <div class="user-container">
+    <div class="border-2 border-black-500 flex flex-wrap hover:bg-gray-500">
         for _, u := range users {
             @user(u)
         }
@@ -21,7 +21,7 @@ templ users(users []m.UserView) {
 
 templ LoginPage(u []m.UserView) {
     <html>
-        @Head([]string{"user.css"})
+        @Head([]string{})
         <body>
             @users(u) 
         </body>

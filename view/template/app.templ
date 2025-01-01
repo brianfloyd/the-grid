@@ -6,6 +6,8 @@ templ Head(css []string) {
     <head>
         <title>The Grid</title>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <link rel="stylesheet" href="/static/css/tailwind-gen.css"></link>
+
         for _, c := range css {
             <link rel="stylesheet" href={fmt.Sprintf("/static/css/%s", c)}></link>
         }
@@ -15,7 +17,7 @@ templ Head(css []string) {
 
 templ App() {
     <html>
-        @Head([]string{"exercises.css"})
+        @Head([]string{})
         <body>
             <div hx-get="/_t/exercises" hx-swap="outerHTML" hx-trigger="load"></div>
             <div id="content"></div>

@@ -22,14 +22,14 @@ func main() {
 	now := time.Now()
 	fmt.Println("The grid is starting up!")
 
-	fmt.Println(context.Background(), "Intializing configuration.")
+	fmt.Println("Intializing configuration.")
 	c := config.NewConfig()
 	err := c.Read()
 	if err != nil {
 		panic("Could not read the configuration file.")
 	}
 
-	fmt.Println(context.Background(), "Intializing logging.")
+	fmt.Println("Intializing logging.")
 	adapter := logger.NewZeroLogAdapater(config.GetLogLevel(c))
 	logger.Init(adapter)
 
