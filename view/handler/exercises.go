@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 type IExerciseViewService interface {
 	GetExerciseGroups() templ.Component
-	GetExercisesForGroup(string) templ.Component
+	GetExercisesForGroup(ctx context.Context, gruop string) templ.Component
 }
 
 type ExerciseViewHandler struct {
@@ -34,5 +35,5 @@ func (e *ExerciseViewHandler) getExerciseGroups(w http.ResponseWriter, r *http.R
 
 func (e *ExerciseViewHandler) getExercisesForGroup(w http.ResponseWriter, r *http.Request) {
 	group := chi.URLParam(r, "group")
-	e.svc.GetExercisesForGroup(group).Render(r.Context(), w)
+	e.svc.GetExercisesForGroup(r.Context(), group).Render(r.Context(), w)
 }

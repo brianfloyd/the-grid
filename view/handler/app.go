@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -26,13 +25,12 @@ func (a *AppViewHandler) Register(r *chi.Mux) {
 
 func (a *AppViewHandler) getApp(w http.ResponseWriter, r *http.Request) {
 	userId := r.CookiesNamed("x-the-grid-uid")
-	fmt.Printf("Cookie %v\n", userId)
 
 	var component templ.Component
 	if len(userId) != 0 {
 		component = template.App()
 	} else {
-		component = a.loginViewService.GetLoginPage()
+		component = a.loginViewService.GetLoginPage(r.Context())
 	}
 	component.Render(r.Context(), w)
 }

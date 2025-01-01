@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/brianfloyd/the-grid/internal/conf"
 	"github.com/brianfloyd/the-grid/internal/db/pg"
+	"github.com/brianfloyd/the-grid/internal/logger"
 	is "github.com/brianfloyd/the-grid/internal/service"
 	rh "github.com/brianfloyd/the-grid/rest/handler"
 	vh "github.com/brianfloyd/the-grid/view/handler"
@@ -18,20 +20,23 @@ import (
 
 func main() {
 	now := time.Now()
-	fmt.Printf("The grid is starting up!\n")
+	fmt.Println("The grid is starting up!")
 
-	fmt.Println("Intializing postgres.")
+	fmt.Println(context.Background(), "Intializing logging.")
+	adapter := logger.NewZeroLogAdapater(logger.LogLevelTrace)
+	logger.Init(adapter)
+
+	logger.Info(context.Background(), "Initializing postgres.")
 	pool, err := pg.NewPostgreSQL(conf.LoadPgConf())
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Intializing chi.")
+	logger.Info(context.Background(), "Initializing chi.")
 	router := chi.NewRouter()
-	router.Use(middleware.RequestID, middleware.Logger, middleware.Recoverer)
+	router.Use(middleware.RequestID, logger.Middleware, middleware.Recoverer)
 
-	fmt.Println("Intializing services.")
-
+	logger.Info(context.Background(), "Initializing services.")
 	// Internal Services
 	userService := setupUserService(pool)
 	workoutService := setupWorkoutService(pool, userService)
@@ -51,11 +56,11 @@ func main() {
 	setupViewLoginHandler(router, loginViewService)
 	setupViewAppHandler(router, loginViewService)
 
-	fmt.Println("Intializing static file content.")
+	logger.Info(context.Background(), "Intializing static file content.")
 	fs := http.FileServer(http.Dir("static/"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
-	fmt.Printf("The grid is about to listen. Startup took %d ms.\n", time.Since(now).Milliseconds())
+	logger.InfoArgs(context.Background(), "The grid is about to listen. Startup took %d ms.", time.Since(now).Milliseconds())
 	http.ListenAndServe(conf.LoadServerAddress(), router)
 }
 

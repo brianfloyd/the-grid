@@ -63,12 +63,12 @@ func NewPostgreSQL(conf PGConfiguration) (*pgxpool.Pool, error) {
 	q.Add("sslmode", string(conf.SslMode))
 	url.RawQuery = q.Encode()
 
-	pool, err := pgxpool.New(context.TODO(), url.String())
+	pool, err := pgxpool.New(context.Background(), url.String())
 	if err != nil {
 		return nil, err
 	}
 
-	if err := pool.Ping(context.TODO()); err != nil {
+	if err := pool.Ping(context.Background()); err != nil {
 		return nil, err
 	}
 

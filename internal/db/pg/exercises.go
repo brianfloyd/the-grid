@@ -1,6 +1,8 @@
 package pg
 
 import (
+	"context"
+
 	m "github.com/brianfloyd/the-grid/internal/model"
 	"github.com/google/uuid"
 )
@@ -25,8 +27,8 @@ func NewExercisesRepository(conn DbConnection) *ExercisesRepository {
 	}
 }
 
-func (e *ExercisesRepository) Create(exercise m.Exercise) (m.Exercise, error) {
-	createdExercise, err := e.q.InsertExercise(InsertExerciseParams{
+func (e *ExercisesRepository) Create(ctx context.Context, exercise m.Exercise) (m.Exercise, error) {
+	createdExercise, err := e.q.InsertExercise(ctx, InsertExerciseParams{
 		id:    uuid.NewString(),
 		group: string(exercise.Group),
 		name:  exercise.Name,
@@ -39,16 +41,16 @@ func (e *ExercisesRepository) Create(exercise m.Exercise) (m.Exercise, error) {
 	return createdExercise, nil
 }
 
-func (e *ExercisesRepository) List() ([]m.Exercise, error) {
-	exercises, err := e.q.List()
+func (e *ExercisesRepository) List(ctx context.Context) ([]m.Exercise, error) {
+	exercises, err := e.q.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return exercises, nil
 }
 
-func (e *ExercisesRepository) ListForGroup(group string) ([]m.Exercise, error) {
-	exercises, err := e.q.ListForGroup(group)
+func (e *ExercisesRepository) ListForGroup(ctx context.Context, group string) ([]m.Exercise, error) {
+	exercises, err := e.q.ListForGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}

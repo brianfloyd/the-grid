@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,8 +12,8 @@ import (
 )
 
 type IExercisesService interface {
-	List() ([]m.Exercise, error)
-	Create(m.Exercise) (m.Exercise, error)
+	List(ctx context.Context) ([]m.Exercise, error)
+	Create(ctx context.Context, exercise m.Exercise) (m.Exercise, error)
 }
 
 type ExercisesHandler struct {
@@ -39,7 +40,7 @@ func (e *ExercisesHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	exercise, err := e.svc.Create(m.Exercise{
+	exercise, err := e.svc.Create(r.Context(), m.Exercise{
 		Group: m.ExerciseGroup(request.Group),
 		Name:  request.Name,
 	})
@@ -65,7 +66,7 @@ func (e *ExercisesHandler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *ExercisesHandler) list(w http.ResponseWriter, r *http.Request) {
-	modelExercises, err := e.svc.List()
+	modelExercises, err := e.svc.List(r.Context())
 	if err != nil {
 		renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while listing exercises.", err)
 		return

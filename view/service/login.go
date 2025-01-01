@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/a-h/templ"
 	im "github.com/brianfloyd/the-grid/internal/model"
 	is "github.com/brianfloyd/the-grid/internal/service"
@@ -9,7 +11,7 @@ import (
 )
 
 type ILoginViewService interface {
-	GetLoginPage() templ.Component
+	GetLoginPage(ctx context.Context) templ.Component
 }
 
 type LoginViewService struct {
@@ -22,8 +24,8 @@ func NewLoginViewService(userService is.IUserService) *LoginViewService {
 	}
 }
 
-func (l *LoginViewService) GetLoginPage() templ.Component {
-	users, err := l.userService.List()
+func (l *LoginViewService) GetLoginPage(ctx context.Context) templ.Component {
+	users, err := l.userService.List(ctx)
 	if err != nil {
 		panic("crash")
 	}

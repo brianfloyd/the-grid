@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/a-h/templ"
 	im "github.com/brianfloyd/the-grid/internal/model"
 	is "github.com/brianfloyd/the-grid/internal/service"
@@ -10,7 +12,7 @@ import (
 
 type IExerciseViewService interface {
 	GetExerciseGroups() templ.Component
-	GetExercisesForGroup(string) templ.Component
+	GetExercisesForGroup(ctx context.Context, group string) templ.Component
 }
 
 type ExerciseViewService struct {
@@ -27,7 +29,7 @@ func (e *ExerciseViewService) GetExerciseGroups() templ.Component {
 	return template.GetExerciseGroups(getGroups())
 }
 
-func (e *ExerciseViewService) GetExercisesForGroup(group string) templ.Component {
+func (e *ExerciseViewService) GetExercisesForGroup(ctx context.Context, group string) templ.Component {
 	groups := getGroups()
 	for i := 0; i < len(groups); i++ {
 		if groups[i].Name == group {
@@ -36,7 +38,7 @@ func (e *ExerciseViewService) GetExercisesForGroup(group string) templ.Component
 		}
 	}
 
-	exercises, err := e.svc.ListForGroup(group)
+	exercises, err := e.svc.ListForGroup(ctx, group)
 	if err != nil {
 		panic("HANDLE ME")
 	}

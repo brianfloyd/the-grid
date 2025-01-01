@@ -37,17 +37,17 @@ type InsertSetParams struct {
 	count      uint64
 }
 
-func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (m.Workout, error) {
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+func (q *WorkoutQueries) InsertWorkout(ctx context.Context, args InsertWorkoutParams) (m.Workout, error) {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadWrite,
 	})
 	if err != nil {
 		return m.Workout{}, err
 	}
 
-	workout, err := scanWorkout(tx.QueryRow(context.TODO(), InsertWorkout, args.id, args.userId, args.date))
+	workout, err := scanWorkout(tx.QueryRow(ctx, InsertWorkout, args.id, args.userId, args.date))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 
@@ -55,19 +55,19 @@ func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (m.Workout, err
 	for _, set := range args.sets {
 		batch.Queue(InsertSet, set.id, args.id, set.exerciseId, set.reps, set.weight, set.count)
 	}
-	results := tx.SendBatch(context.TODO(), batch)
+	results := tx.SendBatch(ctx, batch)
 	defer results.Close()
 
 	sets := []m.Set{}
 	for i := 0; i < len(args.sets); i++ {
 		rows, err := results.Query()
 		if err != nil {
-			tx.Rollback(context.TODO())
+			tx.Rollback(ctx)
 			return m.Workout{}, err
 		}
 		scannedSets, err := scanSets(rows)
 		if err != nil {
-			tx.Rollback(context.TODO())
+			tx.Rollback(ctx)
 			return m.Workout{}, err
 		}
 		sets = append(sets, scannedSets...)
@@ -76,11 +76,11 @@ func (q *WorkoutQueries) InsertWorkout(args InsertWorkoutParams) (m.Workout, err
 
 	err = results.Close()
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return workout, nil
 }
 
@@ -97,33 +97,33 @@ type ByDateParams struct {
 	date   string
 }
 
-func (q *WorkoutQueries) ByDate(args ByDateParams) (m.Workout, error) {
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+func (q *WorkoutQueries) ByDate(ctx context.Context, args ByDateParams) (m.Workout, error) {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 	if err != nil {
 		return m.Workout{}, err
 	}
 
-	workout, err := scanWorkout(tx.QueryRow(context.TODO(), SelectWorkoutByDate, args.userId, args.date))
+	workout, err := scanWorkout(tx.QueryRow(ctx, SelectWorkoutByDate, args.userId, args.date))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 
-	rows, err := tx.Query(context.TODO(), SelectSetsByWorkoutId, workout.Id)
+	rows, err := tx.Query(ctx, SelectSetsByWorkoutId, workout.Id)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 	sets, err := scanSets(rows)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 	workout.Sets = sets
 
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return workout, nil
 }
 

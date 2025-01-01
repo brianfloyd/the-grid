@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type ILoginViewService interface {
-	GetLoginPage() templ.Component
+	GetLoginPage(ctx context.Context) templ.Component
 }
 
 type LoginViewHandler struct {
@@ -29,7 +30,7 @@ func (l *LoginViewHandler) Register(r *chi.Mux) {
 }
 
 func (l *LoginViewHandler) getLoginPage(w http.ResponseWriter, r *http.Request) {
-	l.svc.GetLoginPage().Render(r.Context(), w)
+	l.svc.GetLoginPage(r.Context()).Render(r.Context(), w)
 }
 
 func (l *LoginViewHandler) login(w http.ResponseWriter, r *http.Request) {

@@ -1,26 +1,28 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/brianfloyd/the-grid/internal/db"
+	"github.com/brianfloyd/the-grid/internal/logger"
 	m "github.com/brianfloyd/the-grid/internal/model"
 )
 
 type IWorkoutService interface {
-	ById(id string) (m.Workout, error)
-	ByDate(userId string, date string) (m.Workout, error)
-	Create(userId string, workout m.Workout) (m.Workout, error)
-	CreateSet(workoutId string, set m.Set) (m.Set, error)
-	UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error)
-	DeleteSet(workoutId string, setId string) error
+	ById(ctx context.Context, id string) (m.Workout, error)
+	ByDate(ctx context.Context, userId string, date string) (m.Workout, error)
+	Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error)
+	CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error)
+	UpdateSet(ctx context.Context, workoutId string, setId string, set m.Set) (m.Set, error)
+	DeleteSet(ctx context.Context, workoutId string, setId string) error
 }
 
 type WorkoutRespository interface {
-	ByDate(userId string, date string) (m.Workout, error)
-	Create(userId string, workout m.Workout) (m.Workout, error)
+	ByDate(ctx context.Context, userId string, date string) (m.Workout, error)
+	Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error)
 }
 
 type WorkoutService struct {
@@ -35,13 +37,15 @@ func NewWorkoutService(repo WorkoutRespository, userSvc IUserService) *WorkoutSe
 	}
 }
 
-func (w *WorkoutService) Create(userId string, workout m.Workout) (m.Workout, error) {
+func (w *WorkoutService) Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error) {
+	logger.InfoArgs(ctx, "Creating workout (%v) for user (%s).", workout, userId)
+
 	date, err := sanitizeDate(workout.Date)
 	if err != nil {
 		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
 	}
 
-	exists, err := w.doesWorkoutExistForDate(userId, date)
+	exists, err := w.doesWorkoutExistForDate(ctx, userId, date)
 	if err != nil {
 		return m.Workout{}, errors.Join(&m.GenericWorkoutError{
 			Message: "Could not verify if the workout already exists for the given date.",
@@ -52,7 +56,7 @@ func (w *WorkoutService) Create(userId string, workout m.Workout) (m.Workout, er
 		return m.Workout{}, &m.WorkoutAlreadyExsitsError{Message: fmt.Sprintf("Workout with the date %s already exists.", workout.Date)}
 	}
 
-	_, err = w.userSvc.ById(userId)
+	_, err = w.userSvc.ById(ctx, userId)
 	if err != nil {
 		var userNotFoundError = &m.UserNotFoundError{}
 
@@ -65,7 +69,7 @@ func (w *WorkoutService) Create(userId string, workout m.Workout) (m.Workout, er
 
 	// TODO: For each set, populate the defaults if there is no given value.
 
-	createdWorkout, err := w.repo.Create(userId, workout)
+	createdWorkout, err := w.repo.Create(ctx, userId, workout)
 	if err != nil {
 		return m.Workout{}, errors.Join(&m.GenericWorkoutError{Message: "An unexpected exception occurred while creating a workout."}, err)
 	}
@@ -73,17 +77,17 @@ func (w *WorkoutService) Create(userId string, workout m.Workout) (m.Workout, er
 	return createdWorkout, nil
 }
 
-func (w *WorkoutService) ById(id string) (m.Workout, error) {
+func (w *WorkoutService) ById(ctx context.Context, id string) (m.Workout, error) {
 	return m.Workout{}, nil
 }
 
-func (w *WorkoutService) ByDate(userId string, dateString string) (m.Workout, error) {
+func (w *WorkoutService) ByDate(ctx context.Context, userId string, dateString string) (m.Workout, error) {
 	date, err := sanitizeDate(dateString)
 	if err != nil {
 		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
 	}
 
-	workout, err := w.repo.ByDate(userId, makeDateStringFromTime(date))
+	workout, err := w.repo.ByDate(ctx, userId, makeDateStringFromTime(date))
 	if err != nil {
 		workoutNotFoundError := &m.WorkoutNotFoundError{}
 
@@ -97,22 +101,22 @@ func (w *WorkoutService) ByDate(userId string, dateString string) (m.Workout, er
 	return workout, nil
 }
 
-func (w *WorkoutService) CreateSet(workoutId string, set m.Set) (m.Set, error) {
+func (w *WorkoutService) CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error) {
 	return m.Set{}, nil
 }
 
-func (w *WorkoutService) UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error) {
+func (w *WorkoutService) UpdateSet(ctx context.Context, workoutId string, setId string, set m.Set) (m.Set, error) {
 	return m.Set{}, nil
 }
 
-func (w *WorkoutService) DeleteSet(workoutId string, setId string) error {
+func (w *WorkoutService) DeleteSet(ctx context.Context, workoutId string, setId string) error {
 	return nil
 }
 
-func (w *WorkoutService) doesWorkoutExistForDate(userId string, date time.Time) (bool, error) {
+func (w *WorkoutService) doesWorkoutExistForDate(ctx context.Context, userId string, date time.Time) (bool, error) {
 	dateStr := makeDateStringFromTime(date)
 
-	_, err := w.repo.ByDate(userId, dateStr)
+	_, err := w.repo.ByDate(ctx, userId, dateStr)
 
 	if err == nil {
 		return true, nil

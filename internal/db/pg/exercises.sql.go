@@ -16,13 +16,13 @@ type InsertExerciseParams struct {
 	group string
 }
 
-func (q *ExercisesQueries) InsertExercise(args InsertExerciseParams) (m.Exercise, error) {
+func (q *ExercisesQueries) InsertExercise(ctx context.Context, args InsertExerciseParams) (m.Exercise, error) {
 	const InsertExercise = `
 		insert into the_grid_go.exercise (exr_id, exr_group, exr_name) values ($1, $2, $3)
 		returning exr_id, exr_group, exr_name
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadWrite,
 	})
 
@@ -30,21 +30,21 @@ func (q *ExercisesQueries) InsertExercise(args InsertExerciseParams) (m.Exercise
 		return m.Exercise{}, err
 	}
 
-	user, err := scanExercise(tx.QueryRow(context.TODO(), InsertExercise, args.id, args.group, args.name))
+	user, err := scanExercise(tx.QueryRow(ctx, InsertExercise, args.id, args.group, args.name))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.Exercise{}, err
 	}
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return user, nil
 }
 
-func (q *ExercisesQueries) List() ([]m.Exercise, error) {
+func (q *ExercisesQueries) List(ctx context.Context) ([]m.Exercise, error) {
 	const ListExercises = `
 		select exr_id, exr_group, exr_name from the_grid_go.exercise
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 
@@ -52,29 +52,29 @@ func (q *ExercisesQueries) List() ([]m.Exercise, error) {
 		return nil, err
 	}
 
-	rows, err := tx.Query(context.TODO(), ListExercises)
+	rows, err := tx.Query(ctx, ListExercises)
 
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
 	exercises, err := scanExercises(rows)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return exercises, nil
 }
 
-func (q *ExercisesQueries) ListForGroup(group string) ([]m.Exercise, error) {
+func (q *ExercisesQueries) ListForGroup(ctx context.Context, group string) ([]m.Exercise, error) {
 	const ListExercisesForGroup = `
 		select exr_id, exr_group, exr_name from the_grid_go.exercise where exr_group = $1
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 
@@ -82,20 +82,20 @@ func (q *ExercisesQueries) ListForGroup(group string) ([]m.Exercise, error) {
 		return nil, err
 	}
 
-	rows, err := tx.Query(context.TODO(), ListExercisesForGroup, group)
+	rows, err := tx.Query(ctx, ListExercisesForGroup, group)
 
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
 	exercises, err := scanExercises(rows)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return exercises, nil
 }
 

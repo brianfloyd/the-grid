@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,12 +13,12 @@ import (
 )
 
 type WorkoutService interface {
-	ById(id string) (m.Workout, error)
-	ByDate(userId string, date string) (m.Workout, error)
-	Create(userId string, workout m.Workout) (m.Workout, error)
-	CreateSet(workoutId string, set m.Set) (m.Set, error)
-	UpdateSet(workoutId string, setId string, set m.Set) (m.Set, error)
-	DeleteSet(workoutId string, setId string) error
+	ById(ctx context.Context, id string) (m.Workout, error)
+	ByDate(ctx context.Context, userId string, date string) (m.Workout, error)
+	Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error)
+	CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error)
+	UpdateSet(ctx context.Context, workoutId string, setId string, set m.Set) (m.Set, error)
+	DeleteSet(ctx context.Context, workoutId string, setId string) error
 }
 
 type WorkoutHandler struct {
@@ -48,7 +49,7 @@ func (h *WorkoutHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	mWorkout := convertCreateWorkoutRequestToModelWorkout(request)
 
-	workout, err := h.svc.Create(request.UserId, mWorkout)
+	workout, err := h.svc.Create(r.Context(), request.UserId, mWorkout)
 
 	if err != nil {
 		renderErrorResponse(w, r, rm.GenericError, "Creating a workout failed.", err)
@@ -65,13 +66,13 @@ func (h *WorkoutHandler) create(w http.ResponseWriter, r *http.Request) {
 func (h *WorkoutHandler) byId(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	workout, err := h.svc.ById(id)
+	workout, err := h.svc.ById(r.Context(), id)
 	if err != nil {
 		workoutNotFoundError := &m.WorkoutNotFoundError{}
 		if errors.As(err, &workoutNotFoundError) {
 			renderErrorResponse(w, r, rm.NotFound, "Workout was not found.", err)
 		} else {
-			renderErrorResponse(w, r, rm.GenericError, "Generic workout exception.", err)
+			renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while looking for workout by id.", err)
 		}
 		return
 	}
@@ -91,7 +92,7 @@ func (h *WorkoutHandler) byDate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	workout, err := h.svc.ByDate(request.UserId, request.Date)
+	workout, err := h.svc.ByDate(r.Context(), request.UserId, request.Date)
 	if err != nil {
 		workoutNotFoundError := &m.WorkoutNotFoundError{}
 		if errors.As(err, &workoutNotFoundError) {
@@ -124,7 +125,7 @@ func (h *WorkoutHandler) createSet(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	set, err := h.svc.CreateSet(workoutId, m.Set{
+	set, err := h.svc.CreateSet(r.Context(), workoutId, m.Set{
 		ExerciseId: request.ExerciseId,
 		Reps:       request.Reps,
 		Weight:     request.Weight,
@@ -153,7 +154,7 @@ func (h *WorkoutHandler) updateSet(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	set, err := h.svc.UpdateSet(workoutId, setId, m.Set{
+	set, err := h.svc.UpdateSet(r.Context(), workoutId, setId, m.Set{
 		ExerciseId: request.ExerciseId,
 		Reps:       request.Reps,
 		Weight:     request.Weight,
@@ -175,7 +176,7 @@ func (h *WorkoutHandler) deleteSet(w http.ResponseWriter, r *http.Request) {
 	workoutId := chi.URLParam(r, "id")
 	setId := chi.URLParam(r, "setId")
 
-	err := h.svc.DeleteSet(workoutId, setId)
+	err := h.svc.DeleteSet(r.Context(), workoutId, setId)
 	if err != nil {
 		renderErrorResponse(w, r, rm.GenericError, "Deleting a set failed.", err)
 		return

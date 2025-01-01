@@ -15,12 +15,12 @@ type InsertUserParams struct {
 	name string
 }
 
-func (q *UserQueries) InsertUser(args InsertUserParams) (m.User, error) {
+func (q *UserQueries) InsertUser(ctx context.Context, args InsertUserParams) (m.User, error) {
 	const InsertUser = `
 		insert into the_grid_go.user (usr_id, usr_name) values ($1, $2)
 		returning usr_id, usr_name, usr_created_at
 	`
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadWrite,
 	})
 
@@ -28,21 +28,21 @@ func (q *UserQueries) InsertUser(args InsertUserParams) (m.User, error) {
 		return m.User{}, err
 	}
 
-	user, err := scanUser(tx.QueryRow(context.TODO(), InsertUser, args.id, args.name))
+	user, err := scanUser(tx.QueryRow(ctx, InsertUser, args.id, args.name))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.User{}, err
 	}
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return user, nil
 }
 
-func (q *UserQueries) ById(id string) (m.User, error) {
+func (q *UserQueries) ById(ctx context.Context, id string) (m.User, error) {
 	const ById = `
 		select usr_id, usr_name, usr_created_at from the_grid_go.user where usr_id = $1
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 
@@ -50,21 +50,21 @@ func (q *UserQueries) ById(id string) (m.User, error) {
 		return m.User{}, err
 	}
 
-	user, err := scanUser(tx.QueryRow(context.TODO(), ById, id))
+	user, err := scanUser(tx.QueryRow(ctx, ById, id))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.User{}, err
 	}
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return user, nil
 }
 
-func (q *UserQueries) ByName(name string) (m.User, error) {
+func (q *UserQueries) ByName(ctx context.Context, name string) (m.User, error) {
 	const ByName = `
 		select usr_id, usr_name, usr_created_at from the_grid_go.user where usr_name = $1
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 
@@ -72,40 +72,40 @@ func (q *UserQueries) ByName(name string) (m.User, error) {
 		return m.User{}, err
 	}
 
-	user, err := scanUser(tx.QueryRow(context.TODO(), ByName, name))
+	user, err := scanUser(tx.QueryRow(ctx, ByName, name))
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return m.User{}, err
 	}
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return user, nil
 }
 
-func (q *UserQueries) List() ([]m.User, error) {
+func (q *UserQueries) List(ctx context.Context) ([]m.User, error) {
 	const ListUsers = `
 		select * from the_grid_go.user
 	`
 
-	tx, err := q.db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := tx.Query(context.TODO(), ListUsers)
+	rows, err := tx.Query(ctx, ListUsers)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
 	users, err := scanUsers(rows)
 	if err != nil {
-		tx.Rollback(context.TODO())
+		tx.Rollback(ctx)
 		return nil, err
 	}
 
-	tx.Commit(context.TODO())
+	tx.Commit(ctx)
 	return users, nil
 }
 

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,9 +13,9 @@ import (
 )
 
 type UserService interface {
-	ById(id string) (m.User, error)
-	List() ([]m.User, error)
-	Create(user m.User) (m.User, error)
+	ById(ctx context.Context, id string) (m.User, error)
+	List(ctx context.Context) ([]m.User, error)
+	Create(ctx context.Context, user m.User) (m.User, error)
 }
 
 type UserHandler struct {
@@ -42,7 +43,7 @@ func (u *UserHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	user, err := u.svc.Create(m.User{
+	user, err := u.svc.Create(r.Context(), m.User{
 		Name: request.Name,
 	})
 
@@ -70,7 +71,7 @@ func (u *UserHandler) create(w http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) byId(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	user, err := u.svc.ById(id)
+	user, err := u.svc.ById(r.Context(), id)
 	if err != nil {
 		userNotFoundError := &m.UserNotFoundError{}
 		if errors.As(err, &userNotFoundError) {
@@ -89,7 +90,7 @@ func (u *UserHandler) byId(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) list(w http.ResponseWriter, r *http.Request) {
-	mUsers, err := u.svc.List()
+	mUsers, err := u.svc.List(r.Context())
 	if err != nil {
 		renderErrorResponse(w, r, rm.GenericError, "Could not list users.", err)
 		return
