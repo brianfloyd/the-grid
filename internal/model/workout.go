@@ -20,14 +20,6 @@ type Set struct {
 	Count      uint64
 }
 
-type ExerciseGroup string
-
-type Exercise struct {
-	Id    string
-	Name  string
-	Group ExerciseGroup
-}
-
 type ExerciseDefaults struct {
 	Id         string
 	UserId     string
@@ -53,15 +45,21 @@ type WorkoutAlreadyExsitsError struct {
 }
 
 const (
-	BICEPS   ExerciseGroup = "BICEP"
-	BACK     ExerciseGroup = "BACK"
-	TRICEP   ExerciseGroup = "TRICEP"
-	CHEST    ExerciseGroup = "CHEST"
-	SHOULDER ExerciseGroup = "SHOULDER"
-	LEGS     ExerciseGroup = "LEGS"
-	CARDIO   ExerciseGroup = "CARDIO"
-	MISC     ExerciseGroup = "MISC"
+	ExerciseGroupBiceps   ExerciseGroup = "BICEP"
+	ExerciseGroupBack     ExerciseGroup = "BACK"
+	ExerciseGroupTricep   ExerciseGroup = "TRICEP"
+	ExerciseGroupChest    ExerciseGroup = "CHEST"
+	ExerciseGroupShoulder ExerciseGroup = "SHOULDER"
+	ExerciseGroupLegs     ExerciseGroup = "LEGS"
+	ExerciseGroupCardio   ExerciseGroup = "CARDIO"
+	ExerciseGroupAbs      ExerciseGroup = "ABS"
+	ExerciseGroupMisc     ExerciseGroup = "MISC"
 )
+
+var ExerciseGroupAll []ExerciseGroup = []ExerciseGroup{
+	ExerciseGroupBiceps, ExerciseGroupBack, ExerciseGroupTricep, ExerciseGroupChest, ExerciseGroupShoulder,
+	ExerciseGroupLegs, ExerciseGroupAbs, ExerciseGroupCardio, ExerciseGroupMisc,
+}
 
 func (e *GenericWorkoutError) Error() string {
 	return e.Message

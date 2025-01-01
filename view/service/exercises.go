@@ -2,6 +2,8 @@ package service
 
 import (
 	"github.com/a-h/templ"
+	im "github.com/brianfloyd/the-grid/internal/model"
+	is "github.com/brianfloyd/the-grid/internal/service"
 	m "github.com/brianfloyd/the-grid/view/model"
 	"github.com/brianfloyd/the-grid/view/template"
 )
@@ -12,10 +14,13 @@ type IExerciseViewService interface {
 }
 
 type ExerciseViewService struct {
+	svc is.IExercisesService
 }
 
-func NewExerciseViewService() *ExerciseViewService {
-	return &ExerciseViewService{}
+func NewExerciseViewService(svc is.IExercisesService) *ExerciseViewService {
+	return &ExerciseViewService{
+		svc: svc,
+	}
 }
 
 func (e *ExerciseViewService) GetExerciseGroups() templ.Component {
@@ -23,27 +28,6 @@ func (e *ExerciseViewService) GetExerciseGroups() templ.Component {
 }
 
 func (e *ExerciseViewService) GetExercisesForGroup(group string) templ.Component {
-	exercises := []m.ExerciseView{}
-	if group == "BICEP" {
-		exercises = []m.ExerciseView{
-			{
-				Id:    "1",
-				Group: "BICEP",
-				Name:  "Dumbbell Curls",
-			},
-			{
-				Id:    "2",
-				Group: "BICEP",
-				Name:  "Hammer Curls",
-			},
-			{
-				Id:    "3",
-				Group: "BICEP",
-				Name:  "Preacher Curls",
-			},
-		}
-	}
-
 	groups := getGroups()
 	for i := 0; i < len(groups); i++ {
 		if groups[i].Name == group {
@@ -52,48 +36,62 @@ func (e *ExerciseViewService) GetExercisesForGroup(group string) templ.Component
 		}
 	}
 
-	return template.SelectedExerciseGroup(groups, exercises)
+	exercises, err := e.svc.ListForGroup(group)
+	if err != nil {
+		panic("HANDLE ME")
+	}
+
+	viewExercises := make([]m.ExerciseView, len(exercises))
+	for i, e := range exercises {
+		viewExercises[i] = m.ExerciseView{
+			Id:    e.Id,
+			Name:  e.Name,
+			Group: string(e.Group),
+		}
+	}
+
+	return template.SelectedExerciseGroup(groups, viewExercises)
 }
 
 func getGroups() []m.ExerciseGroupView {
 	return []m.ExerciseGroupView{
 		{
-			Name:     "BICEP",
+			Name:     string(im.ExerciseGroupBiceps),
 			ImageUrl: "/static/images/icons/bicep.png",
 			Selected: false,
 		},
 		{
-			Name:     "BACK",
+			Name:     string(im.ExerciseGroupBack),
 			ImageUrl: "/static/images/icons/back.png",
 			Selected: false,
 		},
 		{
-			Name:     "TRICEP",
+			Name:     string(im.ExerciseGroupTricep),
 			ImageUrl: "/static/images/icons/tricep.png",
 			Selected: false,
 		},
 		{
-			Name:     "CHEST",
+			Name:     string(im.ExerciseGroupChest),
 			ImageUrl: "/static/images/icons/chest.png",
 			Selected: false,
 		},
 		{
-			Name:     "SHOULDER",
+			Name:     string(im.ExerciseGroupShoulder),
 			ImageUrl: "/static/images/icons/shoulder.png",
 			Selected: false,
 		},
 		{
-			Name:     "LEGS",
+			Name:     string(im.ExerciseGroupLegs),
 			ImageUrl: "/static/images/icons/legs.png",
 			Selected: false,
 		},
 		{
-			Name:     "ABS",
+			Name:     string(im.ExerciseGroupAbs),
 			ImageUrl: "/static/images/icons/abs.png",
 			Selected: false,
 		},
 		{
-			Name:     "CARDIO",
+			Name:     string(im.ExerciseGroupCardio),
 			ImageUrl: "/static/images/icons/misc.png",
 			Selected: false,
 		},
