@@ -1,0 +1,13 @@
+{
+    "database": {
+        "username": "{{DATABASE_USERNAME}}",
+        "password": "{{DATABASE_PASSWORD}}",
+        "name": "{{DATABASE_NAME}}",
+        "host": "{{DATABSE_HOST}}",
+        "port": "{{DATABSE_PORT}}",
+        "sslmode": "verify-full"
+    },
+    "log": {
+        "level": "INFO"
+    }
+}

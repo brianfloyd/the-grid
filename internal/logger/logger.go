@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 type ILogger interface {
@@ -81,4 +82,21 @@ func Error(ctx context.Context, message string) {
 
 func ErrorArgs(ctx context.Context, message string, args ...any) {
 	Error(ctx, fmt.Sprintf(message, args...))
+}
+
+func LogLevelFromString(level string) LogLevel {
+	level = strings.ToLower(level)
+	if level == "trace" {
+		return LogLevelTrace
+	} else if level == "debug" {
+		return LogLevelDebug
+	} else if level == "info" {
+		return LogLevelInfo
+	} else if level == "warn" {
+		return LogLevelWarn
+	} else if level == "error" {
+		return LogLevelError
+	} else {
+		return LogLevelInfo
+	}
 }

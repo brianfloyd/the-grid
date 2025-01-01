@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/brianfloyd/the-grid/internal/conf"
+	"github.com/brianfloyd/the-grid/internal/config"
 	"github.com/brianfloyd/the-grid/internal/db/pg"
 	"github.com/brianfloyd/the-grid/internal/logger"
 	is "github.com/brianfloyd/the-grid/internal/service"
@@ -22,12 +22,19 @@ func main() {
 	now := time.Now()
 	fmt.Println("The grid is starting up!")
 
+	fmt.Println(context.Background(), "Intializing configuration.")
+	c := config.NewConfig()
+	err := c.Read()
+	if err != nil {
+		panic("Could not read the configuration file.")
+	}
+
 	fmt.Println(context.Background(), "Intializing logging.")
-	adapter := logger.NewZeroLogAdapater(logger.LogLevelTrace)
+	adapter := logger.NewZeroLogAdapater(config.GetLogLevel(c))
 	logger.Init(adapter)
 
 	logger.Info(context.Background(), "Initializing postgres.")
-	pool, err := pg.NewPostgreSQL(conf.LoadPgConf())
+	pool, err := pg.NewPostgreSQL(config.GetPostgresConfig(c))
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +68,7 @@ func main() {
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	logger.InfoArgs(context.Background(), "The grid is about to listen. Startup took %d ms.", time.Since(now).Milliseconds())
-	http.ListenAndServe(conf.LoadServerAddress(), router)
+	http.ListenAndServe(config.GetServerAddress(), router)
 }
 
 func setupUserService(pool *pgxpool.Pool) is.IUserService {
