@@ -1,0 +1,13 @@
+
+
+#container > #loading-content {
+    display: none;
+}
+
+#container.htmx-request > #content {
+    display: none;
+}
+
+#container.htmx-request > #loading-content {
+    display: inline;
+}

@@ -17,10 +17,18 @@ templ Head(css []string) {
 
 templ App() {
     <html>
-        @Head([]string{})
+        @Head([]string{"app.css"})
         <body>
             <div hx-get="/_t/exercises" hx-swap="outerHTML" hx-trigger="load"></div>
-            <div id="content"></div>
+
+            <div id="container">
+                <div id="loading-content">
+                    <h3>Loading...</h3>
+                </div>
+
+                <div id="content">
+                </div>
+            </div>
         </body>
     </html>
 }

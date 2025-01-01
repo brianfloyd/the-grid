@@ -37,6 +37,7 @@ templ exerciseGroup(g m.ExerciseGroupView, oob bool) {
 			} else {
 				hx-get={string(templ.URL(fmt.Sprintf("/_t/exercises/%s", g.Name)))} 
 			}
+			hx-indicator="#container"
 			hx-swap="innerHTML" 
 			hx-target="#content"
 			hx-trigger="click"

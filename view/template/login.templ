@@ -21,7 +21,7 @@ templ users(users []m.UserView) {
 
 templ LoginPage(u []m.UserView) {
     <html>
-        @Head([]string{})
+        @Head([]string{"app.css"})
         <body>
             @users(u) 
         </body>
