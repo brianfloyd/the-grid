@@ -58,7 +58,7 @@ func (e *ExerciseService) Create(exercise m.Exercise) (m.Exercise, error) {
 	}
 
 	if exists {
-		return m.Exercise{}, &m.ExerciseExistsError{Message: fmt.Sprintf("Exercise in the group (%s) with name (%s) already exists.", exercise.Group, exercise.Name)}
+		return m.Exercise{}, &m.ExerciseExistsError{Message: fmt.Sprintf("Exercise in the group %s with name %s already exists.", exercise.Group, exercise.Name)}
 	}
 
 	createdExercise, err := e.repo.Create(exercise)
@@ -89,7 +89,7 @@ func (e *ExerciseService) doesExerciseExist(exercise m.Exercise) (bool, error) {
 	}
 
 	for _, e := range exercises {
-		if e.Group == exercise.Group && e.Name == e.Name {
+		if e.Group == exercise.Group && e.Name == exercise.Name {
 			return true, nil
 		}
 	}

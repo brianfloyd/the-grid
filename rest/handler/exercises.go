@@ -27,7 +27,7 @@ func NewExerciseHandler(svc IExercisesService) *ExercisesHandler {
 
 func (e *ExercisesHandler) Register(r *chi.Mux) {
 	r.Get("/exercises", e.list)
-	r.Post("/users", e.create)
+	r.Post("/exercises", e.create)
 }
 
 func (e *ExercisesHandler) create(w http.ResponseWriter, r *http.Request) {

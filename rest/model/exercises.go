@@ -1,20 +1,20 @@
 package rest
 
 type CreateExerciseRequest struct {
-	Group string
-	Name  string
+	Group string `json:"group"`
+	Name  string `json:"name"`
 }
 
 type ExericseResponse struct {
-	Id    string
-	Name  string
-	Group string
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Group string `json:"group"`
 }
 
 type CreateExerciseResponse struct {
-	Exercise ExerciseResponse
+	Exercise ExerciseResponse `json:"exercise"`
 }
 
 type ListExercisesResponse struct {
-	Exercises []ExerciseResponse
+	Exercises []ExerciseResponse `json:"exercises"`
 }
