@@ -50,8 +50,8 @@ func main() {
 	exerciseService := setupExercisesService(pool)
 
 	// View Services
-	loginViewService := setupLoginViewService(router, userService)
-	exerciseViewService := setupExerciseViewService(router, exerciseService)
+	loginViewService := setupLoginViewService(userService)
+	exerciseViewService := setupExerciseViewService(exerciseService)
 
 	// Rest handlers
 	setupRestUserHandler(router, userService)
@@ -101,7 +101,7 @@ func setupRestExercisesHandler(router *chi.Mux, exercisesService is.IExercisesSe
 	rh.NewExerciseHandler(exercisesService).Register(router)
 }
 
-func setupExerciseViewService(router *chi.Mux, exercisesService is.IExercisesService) vs.IExerciseViewService {
+func setupExerciseViewService(exercisesService is.IExercisesService) vs.IExerciseViewService {
 	exerciseViewService := vs.NewExerciseViewService(exercisesService)
 	return exerciseViewService
 }
@@ -110,7 +110,7 @@ func setupViewExercisesHandler(router *chi.Mux, exerciseViewService vs.IExercise
 	vh.NewExerciseViewHandler(exerciseViewService).Register(router)
 }
 
-func setupLoginViewService(router *chi.Mux, userService is.IUserService) vs.ILoginViewService {
+func setupLoginViewService(userService is.IUserService) vs.ILoginViewService {
 	loginViewService := vs.NewLoginViewService(userService)
 	return loginViewService
 }

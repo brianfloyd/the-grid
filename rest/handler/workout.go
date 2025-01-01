@@ -98,13 +98,8 @@ func (h *WorkoutHandler) byDate(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &workoutNotFoundError) {
 			renderErrorResponse(w, r, rm.NotFound, "Workout was not found.", err)
 		} else {
-			renderErrorResponse(w, r, rm.GenericError, "Generic workout exception.", err)
+			renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while getting a workout by date.", err)
 		}
-		return
-	}
-
-	if err != nil {
-		renderErrorResponse(w, r, rm.GenericError, "Getting a workout by date failed.", err)
 		return
 	}
 
