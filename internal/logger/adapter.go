@@ -66,7 +66,7 @@ func NewZeroLogAdapater(level LogLevel) *ZeroLogAdapter {
 				FieldRequestId,
 			}
 		}),
-	).Level(convertLogLevel(level)).With().Timestamp().Caller().Logger()
+	).Level(convertLogLevel(level)).With().Timestamp().CallerWithSkipFrameCount(4).Logger()
 	delegate.Hook()
 	return &ZeroLogAdapter{delegate}
 }

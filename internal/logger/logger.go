@@ -41,7 +41,9 @@ func Debug(ctx context.Context, message string) {
 }
 
 func DebugArgs(ctx context.Context, message string, args ...any) {
-	Debug(ctx, fmt.Sprintf(message, args...))
+	if logger != nil {
+		logger.Debug(ctx, fmt.Sprintf(message, args...))
+	}
 }
 
 func Trace(ctx context.Context, message string) {
@@ -51,7 +53,9 @@ func Trace(ctx context.Context, message string) {
 }
 
 func TraceArgs(ctx context.Context, message string, args ...any) {
-	Trace(ctx, fmt.Sprintf(message, args...))
+	if logger != nil {
+		logger.Trace(ctx, fmt.Sprintf(message, args...))
+	}
 }
 
 func Info(ctx context.Context, message string) {
@@ -61,7 +65,9 @@ func Info(ctx context.Context, message string) {
 }
 
 func InfoArgs(ctx context.Context, message string, args ...any) {
-	Info(ctx, fmt.Sprintf(message, args...))
+	if logger != nil {
+		logger.Info(ctx, fmt.Sprintf(message, args...))
+	}
 }
 
 func Warn(ctx context.Context, message string) {
@@ -71,7 +77,9 @@ func Warn(ctx context.Context, message string) {
 }
 
 func WarnArgs(ctx context.Context, message string, args ...any) {
-	Warn(ctx, fmt.Sprintf(message, args...))
+	if logger != nil {
+		logger.Warn(ctx, fmt.Sprintf(message, args...))
+	}
 }
 
 func Error(ctx context.Context, message string) {
@@ -81,7 +89,9 @@ func Error(ctx context.Context, message string) {
 }
 
 func ErrorArgs(ctx context.Context, message string, args ...any) {
-	Error(ctx, fmt.Sprintf(message, args...))
+	if logger != nil {
+		logger.Error(ctx, fmt.Sprintf(message, args...))
+	}
 }
 
 func LogLevelFromString(level string) LogLevel {

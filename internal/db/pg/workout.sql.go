@@ -15,10 +15,25 @@ const InsertWorkout = `
 insert into the_grid_go.workout (wrk_id, wrk_usr_id, wrk_date, wrk_created_at, wrk_modified_at) values ($1, $2, $3, current_timestamp, current_timestamp)
 returning wrk_id, wrk_usr_id, wrk_date, wrk_created_at, wrk_modified_at
 `
-
 const InsertSet = `
 insert into the_grid_go.set (set_id, set_wrk_id, set_exr_id, set_reps, set_weight, set_count) values ($1, $2, $3, $4, $5, $6)
 returning set_id, set_wrk_id, set_exr_id, set_reps, set_weight, set_count
+`
+const UpdateSet = `
+update the_grid_go.set set set_exr_id = $1, set_reps = $2, set_weight = $3, set_count = $4 where set_id = $5
+returning set_id, set_wrk_id, set_exr_id, set_reps, set_weight, set_count
+`
+const SelectWorkoutByDate = `
+select * from the_grid_go.workout where wrk_usr_id = $1 and wrk_date = $2
+`
+const SelectWorkoutById = `
+select * from the_grid_go.workout where wrk_id = $1
+`
+const SelectSetsByWorkoutId = `
+select set_id, set_wrk_id, set_exr_id, set_reps, set_weight, set_count from the_grid_go.set where set_wrk_id = $1
+`
+const DeleteSet = `
+delete from the_grid_go.set where set_id = $1
 `
 
 type InsertWorkoutParams struct {
@@ -35,6 +50,20 @@ type InsertSetParams struct {
 	reps       uint64
 	weight     uint64
 	count      uint64
+}
+
+type ByDateParams struct {
+	userId string
+	date   string
+}
+
+// Date is represented as a time in the database but is handled in the domain as a string.
+type DatabaseWorkout struct {
+	id         string
+	userId     string
+	date       time.Time
+	createdAt  time.Time
+	modifiedAt time.Time
 }
 
 func (q *WorkoutQueries) InsertWorkout(ctx context.Context, args InsertWorkoutParams) (m.Workout, error) {
@@ -84,19 +113,6 @@ func (q *WorkoutQueries) InsertWorkout(ctx context.Context, args InsertWorkoutPa
 	return workout, nil
 }
 
-const SelectWorkoutByDate = `
-select * from the_grid_go.workout where wrk_usr_id = $1 and wrk_date = $2
-`
-
-const SelectSetsByWorkoutId = `
-select * from the_grid_go.set where set_wrk_id = $1
-`
-
-type ByDateParams struct {
-	userId string
-	date   string
-}
-
 func (q *WorkoutQueries) ByDate(ctx context.Context, args ByDateParams) (m.Workout, error) {
 	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
@@ -127,13 +143,92 @@ func (q *WorkoutQueries) ByDate(ctx context.Context, args ByDateParams) (m.Worko
 	return workout, nil
 }
 
-// Date is represented as a time in the database but is handled in the domain as a string.
-type DatabaseWorkout struct {
-	id         string
-	userId     string
-	date       time.Time
-	createdAt  time.Time
-	modifiedAt time.Time
+func (q *WorkoutQueries) ById(ctx context.Context, id string) (m.Workout, error) {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
+		AccessMode: pgx.ReadOnly,
+	})
+	if err != nil {
+		return m.Workout{}, err
+	}
+
+	workout, err := scanWorkout(tx.QueryRow(ctx, SelectWorkoutById, id))
+	if err != nil {
+		tx.Rollback(ctx)
+		return m.Workout{}, err
+	}
+
+	rows, err := tx.Query(ctx, SelectSetsByWorkoutId, workout.Id)
+	if err != nil {
+		tx.Rollback(ctx)
+		return m.Workout{}, err
+	}
+
+	sets, err := scanSets(rows)
+	if err != nil {
+		tx.Rollback(ctx)
+		return m.Workout{}, err
+	}
+	workout.Sets = sets
+
+	tx.Commit(ctx)
+	return workout, nil
+}
+
+func (q *WorkoutQueries) InsertSet(ctx context.Context, params InsertSetParams) (m.Set, error) {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
+		AccessMode: pgx.ReadWrite,
+	})
+
+	if err != nil {
+		return m.Set{}, err
+	}
+
+	set, err := scanSet(tx.QueryRow(ctx, InsertSet, params.id, params.workoutId, params.exerciseId, params.reps, params.weight, params.count))
+	if err != nil {
+		tx.Rollback(ctx)
+		return m.Set{}, err
+	}
+
+	tx.Commit(ctx)
+	return set, nil
+}
+
+func (q *WorkoutQueries) UpdateSet(ctx context.Context, params InsertSetParams) (m.Set, error) {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
+		AccessMode: pgx.ReadWrite,
+	})
+
+	if err != nil {
+		return m.Set{}, err
+	}
+
+	set, err := scanSet(tx.QueryRow(ctx, UpdateSet, params.exerciseId, params.reps, params.weight, params.count, params.id))
+	if err != nil {
+		tx.Rollback(ctx)
+		return m.Set{}, err
+	}
+
+	tx.Commit(ctx)
+	return set, nil
+}
+
+func (q *WorkoutQueries) DeleteSet(ctx context.Context, setId string) error {
+	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
+		AccessMode: pgx.ReadWrite,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, DeleteSet, setId)
+	if err != nil {
+		tx.Rollback(ctx)
+		return err
+	}
+
+	tx.Commit(ctx)
+	return nil
 }
 
 func scanWorkout(row pgx.Row) (m.Workout, error) {
@@ -160,6 +255,26 @@ func scanWorkout(row pgx.Row) (m.Workout, error) {
 		CreatedAt:  dto.createdAt,
 		ModifiedAt: dto.modifiedAt,
 	}, nil
+}
+
+func scanSet(row pgx.Row) (m.Set, error) {
+	set := m.Set{}
+	err := row.Scan(
+		&set.Id,
+		&set.WorkoutId,
+		&set.ExerciseId,
+		&set.Reps,
+		&set.Weight,
+		&set.Count,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return m.Set{}, db.ErrDbNotFound
+		} else {
+			return m.Set{}, errors.Join(db.ErrDbGeneric, err)
+		}
+	}
+	return set, nil
 }
 
 func scanSets(rows pgx.Rows) ([]m.Set, error) {

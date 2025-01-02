@@ -8,26 +8,26 @@ import (
 )
 
 type WorkoutQueries struct {
-	db DbConnection
+	db IDbConnection
 }
 
-func NewWorkoutQueries(conn DbConnection) *WorkoutQueries {
+func NewWorkoutQueries(conn IDbConnection) *WorkoutQueries {
 	return &WorkoutQueries{
 		db: conn,
 	}
 }
 
-type Workout struct {
+type WorkoutRepository struct {
 	q *WorkoutQueries
 }
 
-func NewWorkout(conn DbConnection) *Workout {
-	return &Workout{
+func NewWorkoutRepository(conn IDbConnection) *WorkoutRepository {
+	return &WorkoutRepository{
 		q: NewWorkoutQueries(conn),
 	}
 }
 
-func (w *Workout) Create(ctx context.Context, userId string, params m.Workout) (m.Workout, error) {
+func (w *WorkoutRepository) Create(ctx context.Context, userId string, params m.Workout) (m.Workout, error) {
 	workoutId := uuid.NewString()
 
 	insertSetParams := make([]InsertSetParams, len(params.Sets))
@@ -42,27 +42,47 @@ func (w *Workout) Create(ctx context.Context, userId string, params m.Workout) (
 		}
 	}
 
-	workout, err := w.q.InsertWorkout(ctx, InsertWorkoutParams{
+	return w.q.InsertWorkout(ctx, InsertWorkoutParams{
 		id:     workoutId,
 		userId: userId,
 		date:   params.Date,
 		sets:   insertSetParams,
 	})
-
-	if err != nil {
-		return m.Workout{}, err
-	}
-	return workout, nil
 }
 
-func (w *Workout) ByDate(ctx context.Context, userId string, date string) (m.Workout, error) {
-	workout, err := w.q.ByDate(ctx, ByDateParams{
+func (w *WorkoutRepository) ByDate(ctx context.Context, userId string, date string) (m.Workout, error) {
+	return w.q.ByDate(ctx, ByDateParams{
 		userId: userId,
 		date:   date,
 	})
+}
 
-	if err != nil {
-		return m.Workout{}, err
-	}
-	return workout, nil
+func (w *WorkoutRepository) ById(ctx context.Context, id string) (m.Workout, error) {
+	return w.q.ById(ctx, id)
+}
+
+func (w *WorkoutRepository) CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error) {
+	return w.q.InsertSet(ctx, InsertSetParams{
+		id:         uuid.NewString(),
+		workoutId:  workoutId,
+		exerciseId: set.ExerciseId,
+		reps:       set.Reps,
+		weight:     set.Weight,
+		count:      set.Count,
+	})
+}
+
+func (w *WorkoutRepository) UpdateSet(ctx context.Context, set m.Set) (m.Set, error) {
+	return w.q.UpdateSet(ctx, InsertSetParams{
+		id:         set.Id,
+		workoutId:  set.WorkoutId,
+		exerciseId: set.ExerciseId,
+		reps:       set.Reps,
+		weight:     set.Weight,
+		count:      set.Count,
+	})
+}
+
+func (w *WorkoutRepository) DeleteSet(ctx context.Context, setId string) error {
+	return w.q.DeleteSet(ctx, setId)
 }

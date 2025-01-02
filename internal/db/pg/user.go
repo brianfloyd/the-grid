@@ -8,10 +8,10 @@ import (
 )
 
 type UserQueries struct {
-	db DbConnection
+	db IDbConnection
 }
 
-func NewUserQueries(conn DbConnection) *UserQueries {
+func NewUserQueries(conn IDbConnection) *UserQueries {
 	return &UserQueries{
 		db: conn,
 	}
@@ -21,7 +21,7 @@ type User struct {
 	q *UserQueries
 }
 
-func NewUser(conn DbConnection) *User {
+func NewUser(conn IDbConnection) *User {
 	return &User{
 		q: NewUserQueries(conn),
 	}

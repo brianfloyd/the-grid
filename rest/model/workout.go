@@ -66,11 +66,16 @@ type CreateSetResponse struct {
 }
 
 type UpdateSetRequest struct {
-	ExerciseId string `json:"exerciseId"`
-	Weight     uint64 `json:"weight"`
-	Reps       uint64 `json:"reps"`
+	ExerciseId string `json:"exerciseId,omitempty"`
+	Weight     uint64 `json:"weight,omitempty"`
+	Reps       uint64 `json:"reps,omitempty"`
 }
 
 type UpdateSetResponse struct {
 	Set SetResponse `json:"set"`
+}
+
+type DeleteSetResponse struct {
+	WorkoutId string `json:"workoutId"`
+	SetId     string `json:"setId"`
 }

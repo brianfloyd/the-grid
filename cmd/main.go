@@ -82,7 +82,7 @@ func setupRestUserHandler(router *chi.Mux, userService is.IUserService) {
 }
 
 func setupWorkoutService(pool *pgxpool.Pool, userSvc is.IUserService) is.IWorkoutService {
-	workoutRepo := pg.NewWorkout(pool)
+	workoutRepo := pg.NewWorkoutRepository(pool)
 	workoutSvc := is.NewWorkoutService(workoutRepo, userSvc)
 	return workoutSvc
 }

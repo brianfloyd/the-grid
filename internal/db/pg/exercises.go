@@ -8,10 +8,10 @@ import (
 )
 
 type ExercisesQueries struct {
-	db DbConnection
+	db IDbConnection
 }
 
-func NewExercisesQueries(conn DbConnection) *ExercisesQueries {
+func NewExercisesQueries(conn IDbConnection) *ExercisesQueries {
 	return &ExercisesQueries{
 		db: conn,
 	}
@@ -21,7 +21,7 @@ type ExercisesRepository struct {
 	q *ExercisesQueries
 }
 
-func NewExercisesRepository(conn DbConnection) *ExercisesRepository {
+func NewExercisesRepository(conn IDbConnection) *ExercisesRepository {
 	return &ExercisesRepository{
 		q: NewExercisesQueries(conn),
 	}

@@ -10,14 +10,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DbConnection interface {
+type IDbConnection interface {
 	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
 	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
 	BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
 }
 
-func New(db DbConnection) *Queries {
+func New(db IDbConnection) *Queries {
 	return &Queries{
 		db:      db,
 		workout: WorkoutQueries{},
@@ -26,7 +26,7 @@ func New(db DbConnection) *Queries {
 }
 
 type Queries struct {
-	db      DbConnection
+	db      IDbConnection
 	workout WorkoutQueries
 	user    UserQueries
 }

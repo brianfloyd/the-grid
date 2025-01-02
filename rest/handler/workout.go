@@ -37,6 +37,7 @@ func (h *WorkoutHandler) Register(r *chi.Mux) {
 	r.Post("/workouts/date", h.byDate)
 	r.Post(fmt.Sprintf("/workouts/{id:%s}/sets", rm.UUID_REGEX), h.createSet)
 	r.Patch(fmt.Sprintf("/workouts/{id:%s}/sets/{setId:%s}", rm.UUID_REGEX, rm.UUID_REGEX), h.updateSet)
+	r.Delete(fmt.Sprintf("/workouts/{id:%s}/sets/{setId:%s}", rm.UUID_REGEX, rm.UUID_REGEX), h.deleteSet)
 }
 
 func (h *WorkoutHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +128,12 @@ func (h *WorkoutHandler) createSet(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		renderErrorResponse(w, r, rm.GenericError, "Creating a set failed.", err)
+		workoutNotFoundError := &m.WorkoutNotFoundError{}
+		if errors.As(err, &workoutNotFoundError) {
+			renderErrorResponse(w, r, rm.BadRequest, fmt.Sprintf("Workout with id '%s' does not exist.", workoutId), err)
+		} else {
+			renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while creating a set.", err)
+		}
 		return
 	}
 
@@ -156,7 +162,7 @@ func (h *WorkoutHandler) updateSet(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		renderErrorResponse(w, r, rm.GenericError, "Updating a set failed.", err)
+		renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while updating a set.", err)
 		return
 	}
 
@@ -173,11 +179,11 @@ func (h *WorkoutHandler) deleteSet(w http.ResponseWriter, r *http.Request) {
 
 	err := h.svc.DeleteSet(r.Context(), workoutId, setId)
 	if err != nil {
-		renderErrorResponse(w, r, rm.GenericError, "Deleting a set failed.", err)
+		renderErrorResponse(w, r, rm.GenericError, "An unexpected error occurred while deleting a set.", err)
 		return
 	}
 
-	renderResponse(w, r, "ok", http.StatusOK)
+	renderResponse(w, r, rm.DeleteSetResponse{WorkoutId: workoutId, SetId: setId}, http.StatusOK)
 }
 
 func convertModelSetToResponseSet(set m.Set) rm.SetResponse {

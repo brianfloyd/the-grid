@@ -21,8 +21,12 @@ type IWorkoutService interface {
 }
 
 type WorkoutRespository interface {
+	ById(ctx context.Context, id string) (m.Workout, error)
 	ByDate(ctx context.Context, userId string, date string) (m.Workout, error)
 	Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error)
+	CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error)
+	UpdateSet(ctx context.Context, set m.Set) (m.Set, error)
+	DeleteSet(ctx context.Context, setId string) error
 }
 
 type WorkoutService struct {
@@ -78,7 +82,19 @@ func (w *WorkoutService) Create(ctx context.Context, userId string, workout m.Wo
 }
 
 func (w *WorkoutService) ById(ctx context.Context, id string) (m.Workout, error) {
-	return m.Workout{}, nil
+	logger.TraceArgs(ctx, "Getting workout by id (%s).", id)
+
+	workout, err := w.repo.ById(ctx, id)
+	if err != nil {
+		if errors.Is(err, db.ErrDbNotFound) {
+			return m.Workout{}, &m.WorkoutNotFoundError{Message: fmt.Sprintf("Could not find workout by id '%s'.", id)}
+		} else {
+			message := fmt.Sprintf("An unexpected error occurred while getting workout by id (%s).", id)
+			return m.Workout{}, errors.Join(&m.GenericWorkoutError{Message: message}, err)
+		}
+	}
+
+	return workout, nil
 }
 
 func (w *WorkoutService) ByDate(ctx context.Context, userId string, dateString string) (m.Workout, error) {
@@ -102,14 +118,84 @@ func (w *WorkoutService) ByDate(ctx context.Context, userId string, dateString s
 }
 
 func (w *WorkoutService) CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error) {
-	return m.Set{}, nil
+	_, err := w.ById(ctx, workoutId)
+	if err != nil {
+		return m.Set{}, err
+	}
+
+	set, err = w.repo.CreateSet(ctx, workoutId, set)
+	if err != nil {
+		return m.Set{}, errors.Join(&m.GenericWorkoutError{Message: "An unexpected error occurred while creating a set."}, err)
+	}
+
+	return set, nil
 }
 
 func (w *WorkoutService) UpdateSet(ctx context.Context, workoutId string, setId string, set m.Set) (m.Set, error) {
-	return m.Set{}, nil
+	workout, err := w.ById(ctx, workoutId)
+	if err != nil {
+		return m.Set{}, err
+	}
+
+	var targetSet *m.Set
+	for i := 0; i < len(workout.Sets); i++ {
+		if workout.Sets[i].Id == setId {
+			targetSet = &workout.Sets[i]
+			break
+		}
+	}
+
+	if targetSet == nil {
+		return m.Set{}, &m.WorkoutInvalidInputError{Message: fmt.Sprintf("Workout '%s' does not contain set '%s'.", workoutId, setId)}
+	}
+
+	set.Id = targetSet.Id
+	set.WorkoutId = targetSet.WorkoutId
+	if set.ExerciseId == "" {
+		set.ExerciseId = targetSet.ExerciseId
+	}
+	if set.Reps == 0 {
+		set.Reps = targetSet.Reps
+	}
+	if set.Weight == 0 {
+		set.Weight = targetSet.Weight
+	}
+	if set.Count == 0 {
+		set.Count = targetSet.Count
+	}
+
+	set, err = w.repo.UpdateSet(ctx, set)
+	if err != nil {
+		return m.Set{}, errors.Join(&m.GenericWorkoutError{Message: "An unexpected error occurred while updating a set."}, err)
+	}
+
+	return set, nil
 }
 
 func (w *WorkoutService) DeleteSet(ctx context.Context, workoutId string, setId string) error {
+	logger.InfoArgs(ctx, "Deleting set '%s' from workout '%s'.", setId, workoutId)
+
+	workout, err := w.ById(ctx, workoutId)
+	if err != nil {
+		return err
+	}
+
+	var targetSet *m.Set
+	for i := 0; i < len(workout.Sets); i++ {
+		if workout.Sets[i].Id == setId {
+			targetSet = &workout.Sets[i]
+			break
+		}
+	}
+
+	if targetSet == nil {
+		return &m.WorkoutInvalidInputError{Message: fmt.Sprintf("Workout '%s' does not contain set '%s'.", workoutId, setId)}
+	}
+
+	err = w.repo.DeleteSet(ctx, setId)
+	if err != nil {
+		return errors.Join(&m.GenericWorkoutError{Message: "An unexpected error occurred while deleting a set."}, err)
+	}
 	return nil
 }
 
