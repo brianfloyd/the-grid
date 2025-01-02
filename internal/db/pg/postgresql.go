@@ -17,20 +17,6 @@ type IDbConnection interface {
 	BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
 }
 
-func New(db IDbConnection) *Queries {
-	return &Queries{
-		db:      db,
-		workout: WorkoutQueries{},
-		user:    UserQueries{},
-	}
-}
-
-type Queries struct {
-	db      IDbConnection
-	workout WorkoutQueries
-	user    UserQueries
-}
-
 type PGSslMode string
 
 var (
