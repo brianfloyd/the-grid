@@ -1,7 +1,27 @@
 package template
 
-templ Workout() {
-    <div>
-        <h3>No workout for today!</h3>
+import (
+    m "github.com/brianfloyd/the-grid/view/model"
+)
+
+templ setTemplate(s m.SetView) {
+    <p>{s.Exercise.Name} - {s.Weight} {s.WeightType} - {s.Reps} reps</p>
+}
+
+templ Workout(w m.WorkoutView) {
+    <div class="border-4 border-indigo-500 ">
+        <h3>Workout: {w.Date}</h3>
+        for _, groupKey := range w.PreferredExerciseGroupOrder {
+            if group, ok := w.Groups[groupKey]; ok {
+                <div>
+                    <h3>{group.Group.FriendlyValue}</h3>
+                    <div>
+                        for _, set := range group.Sets {
+                            @setTemplate(set)
+                        }
+                    </div>
+                </div>
+            }
+        }
     </div>
 }

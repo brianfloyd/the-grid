@@ -52,6 +52,7 @@ func main() {
 	// View Services
 	loginViewService := setupLoginViewService(userService)
 	exerciseViewService := setupExerciseViewService(exerciseService)
+	workoutViewService := setupWorkoutViewService(workoutService, exerciseService)
 
 	// Rest handlers
 	setupRestUserHandler(router, userService)
@@ -60,6 +61,7 @@ func main() {
 
 	// View handlers
 	setupViewExercisesHandler(router, exerciseViewService)
+	setupViewWorkoutHandler(router, workoutViewService)
 	setupViewLoginHandler(router, loginViewService)
 	setupViewAppHandler(router)
 
@@ -121,4 +123,12 @@ func setupViewLoginHandler(router *chi.Mux, loginViewService vs.ILoginViewServic
 
 func setupViewAppHandler(router *chi.Mux) {
 	vh.NewAppViewHandler().Register(router)
+}
+
+func setupWorkoutViewService(workoutService is.IWorkoutService, exercisesService is.IExercisesService) vs.IWorkoutViewService {
+	return vs.NewWorkoutViewService(workoutService, exercisesService)
+}
+
+func setupViewWorkoutHandler(router *chi.Mux, workoutViewService vs.IWorkoutViewService) {
+	vh.NewWorkoutViewHandler(workoutViewService).Register(router)
 }

@@ -6,6 +6,7 @@ templ Head(css []string) {
     <head>
         <title>The Grid</title>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
         <link rel="stylesheet" href="/static/css/tailwind-gen.css"></link>
 
         for _, c := range css {
@@ -15,11 +16,17 @@ templ Head(css []string) {
 }
 
 
-templ App() {
+templ App(date string) {
     <html>
         @Head([]string{"app.css"})
         <body>
-            <div hx-get="/_t/exercises" hx-swap="outerHTML" hx-trigger="load"></div>
+            <div hx-get="/_t/exercises" hx-swap="outerHTML" hx-trigger="load">
+                <h3>Loading...</h3>
+            </div>
+
+            <form hx-post="/_t/workout" hx-swap="innerHTML" hx-target="#content" hx-trigger="load" hx-ext="json-enc">
+                <input type="hidden" name="date" value={date}/>
+            </form>
 
             <div id="container">
                 <div id="loading-content">
@@ -27,7 +34,12 @@ templ App() {
                 </div>
 
                 <div id="content">
+                    <h3>Loading...</h3>
                 </div>
+            </div>
+
+            <div>
+                <h3 id="workout-date">{date}</h3>
             </div>
         </body>
     </html>
