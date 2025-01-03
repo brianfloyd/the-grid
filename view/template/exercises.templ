@@ -33,9 +33,9 @@ templ exerciseGroup(g m.ExerciseGroupView, oob bool) {
 				hx-swap-oob={fmt.Sprintf("outerHTML:[data-name=%s]", g.Name)}
 			}
 			if g.Selected {
-				hx-get={string(templ.URL(fmt.Sprintf("/_t/exercises/%s", g.Name)))} 
+				hx-get={string(templ.URL(fmt.Sprintf("/_t/exercises/%s?selected=%s", g.Name, g.Name)))} 
 			} else {
-				hx-get={string(templ.URL(fmt.Sprintf("/_t/exercises/%s", g.Name)))} 
+				hx-get={string(templ.URL(fmt.Sprintf("/_t/exercises/%s?selected=%s", g.Name, g.Name)))} 
 			}
 			hx-indicator="#container"
 			hx-swap="innerHTML" 

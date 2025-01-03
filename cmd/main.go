@@ -61,7 +61,7 @@ func main() {
 	// View handlers
 	setupViewExercisesHandler(router, exerciseViewService)
 	setupViewLoginHandler(router, loginViewService)
-	setupViewAppHandler(router, loginViewService)
+	setupViewAppHandler(router)
 
 	logger.Info(context.Background(), "Intializing static file content.")
 	fs := http.FileServer(http.Dir("static/"))
@@ -119,6 +119,6 @@ func setupViewLoginHandler(router *chi.Mux, loginViewService vs.ILoginViewServic
 	vh.NewLoginViewHandler(loginViewService).Register(router)
 }
 
-func setupViewAppHandler(router *chi.Mux, loginViewService vs.ILoginViewService) {
-	vh.NewAppViewHandler(loginViewService).Register(router)
+func setupViewAppHandler(router *chi.Mux) {
+	vh.NewAppViewHandler().Register(router)
 }

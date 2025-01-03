@@ -3,20 +3,15 @@ package handler
 import (
 	"net/http"
 
-	"github.com/a-h/templ"
 	"github.com/brianfloyd/the-grid/view/template"
 	"github.com/go-chi/chi"
 )
 
 type AppViewHandler struct {
-	loginViewService ILoginViewService
-	// appViewService IAppViewService
 }
 
-func NewAppViewHandler(loginViewService ILoginViewService) *AppViewHandler {
-	return &AppViewHandler{
-		loginViewService: loginViewService,
-	}
+func NewAppViewHandler() *AppViewHandler {
+	return &AppViewHandler{}
 }
 
 func (a *AppViewHandler) Register(r *chi.Mux) {
@@ -26,11 +21,11 @@ func (a *AppViewHandler) Register(r *chi.Mux) {
 func (a *AppViewHandler) getApp(w http.ResponseWriter, r *http.Request) {
 	userId := r.CookiesNamed("x-the-grid-uid")
 
-	var component templ.Component
-	if len(userId) != 0 {
-		component = template.App()
-	} else {
-		component = a.loginViewService.GetLoginPage(r.Context())
+	if len(userId) == 0 {
+		w.Header().Add("Location", "/login")
+		w.WriteHeader(301)
+		return
 	}
-	component.Render(r.Context(), w)
+
+	template.App().Render(r.Context(), w)
 }
