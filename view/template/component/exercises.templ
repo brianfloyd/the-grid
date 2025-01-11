@@ -4,22 +4,34 @@ import (
 	m "github.com/brianfloyd/the-grid/view/model"
 )
 
-templ ExercisesComponent(exercises []m.ExerciseView) {
+templ addRemoveExerciseFormComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
+	<form hx-post={string(e.Form.SubmitURL)} hx-indicator={"#" + e.Form.IndicatorId} hx-disabled-elt={e.Form.DisableInputTarget} hx-swap="none">
+		<input type="text" name="exerciseId" value={e.Id} hidden/>
+		<input type="text" name="date" value={m.Date} hidden/>
+		<input type="text" name="group" value={e.Group} hidden/>
+		<div>
+			<input add-remove-btn type="submit" class="p-[5px] bg-indigo-500 hover:bg-indigo-700 disabled:bg-indigo-200 cursor-pointer disabled:cursor-not-allowed rounded" value={e.Form.SubmitButtonText}/>
+			<i id={e.Form.IndicatorId} class="fa fa-spinner fa-spin htmx-indicator"></i>
+		</div>
+	</form>
+}
+
+templ ExerciseComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
+	<div class="flex">
+		<h3>{e.Name}</h3>
+		@addRemoveExerciseFormComponent(m, e)
+	</div>
+}
+
+templ ExercisesComponent(r m.ExerciseViewResponse) {
 	<div class="exercises">
-		for _, e := range exercises {
-			<div class="exercise">
-				<h3>{e.Name}</h3>
-				if e.InWorkout {
-					<span> REMOVE </span>
-				} else {
-					<span> ADD </span>
-				}
-			</div>
+		for _, e := range r.Views {
+			@ExerciseComponent(r.Meta, e)
 		}
 	</div>
 }
 
-templ ExerciseGroupsComponent(g []m.ExerciseGroupView) {
+templ ExerciseGroupsComponent(g []m.ExerciseGroupViewResponse) {
 	<div class="border-2 border-black-500 flex flex-wrap">
 		for _, groupView := range g {
 			@ExerciseGroupComponent(groupView)
@@ -27,10 +39,10 @@ templ ExerciseGroupsComponent(g []m.ExerciseGroupView) {
 	</div>
 }
 
-templ ExerciseGroupComponent(g m.ExerciseGroupView) {
-	<a href={g.NavigationLink}>
-		<div class={"border-2 border-red-500", templ.KV("border-4 border-yellow-500", g.Selected)}>
-			<image src={g.ImageUrl}></image>
+templ ExerciseGroupComponent(g m.ExerciseGroupViewResponse) {
+	<a href={g.Meta.NavigationLink}>
+		<div class={"border-2 border-red-500", templ.KV("border-4 border-yellow-500", g.View.Selected)}>
+			<image src={g.View.ImageUrl}></image>
 		</div>
 	</a>
 }

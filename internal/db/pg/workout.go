@@ -83,6 +83,6 @@ func (w *WorkoutRepository) UpdateSet(ctx context.Context, set m.Set) (m.Set, er
 	})
 }
 
-func (w *WorkoutRepository) DeleteSet(ctx context.Context, setId string) error {
-	return w.q.DeleteSet(ctx, setId)
+func (w *WorkoutRepository) DeleteSets(ctx context.Context, setIds []string) error {
+	return w.q.DeleteSets(ctx, setIds)
 }

@@ -33,8 +33,8 @@ select * from the_grid_go.workout where wrk_id = $1
 const SelectSetsByWorkoutId = `
 select set_id, set_wrk_id, set_exr_id, set_reps, set_weight, set_count from the_grid_go.set where set_wrk_id = $1
 `
-const DeleteSet = `
-delete from the_grid_go.set where set_id = $1
+const DeleteSets = `
+delete from the_grid_go.set where set_id = any($1)
 `
 
 type InsertWorkoutParams struct {
@@ -216,7 +216,7 @@ func (q *WorkoutQueries) UpdateSet(ctx context.Context, params InsertSetParams) 
 	return set, nil
 }
 
-func (q *WorkoutQueries) DeleteSet(ctx context.Context, setId string) error {
+func (q *WorkoutQueries) DeleteSets(ctx context.Context, setIds []string) error {
 	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{
 		AccessMode: pgx.ReadWrite,
 	})
@@ -225,7 +225,7 @@ func (q *WorkoutQueries) DeleteSet(ctx context.Context, setId string) error {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, DeleteSet, setId)
+	_, err = tx.Exec(ctx, DeleteSets, setIds)
 	if err != nil {
 		tx.Rollback(ctx)
 		return err

@@ -7,11 +7,15 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/brianfloyd/the-grid/util"
+	m "github.com/brianfloyd/the-grid/view/model"
+	"github.com/brianfloyd/the-grid/view/template/component"
 	"github.com/go-chi/chi"
 )
 
 type IExerciseViewService interface {
 	GetExercisesForGroupPage(ctx context.Context, group, date, uid string) templ.Component
+	AddExerciseToWorkout(ctx context.Context, exerciseId, date, uid string) templ.Component
+	RemoveExerciseFromWorkout(ctx context.Context, exerciseId, date, uid string) templ.Component
 }
 
 type ExerciseViewHandler struct {
@@ -26,6 +30,8 @@ func NewExerciseViewHandler(svc IExerciseViewService) *ExerciseViewHandler {
 
 func (e *ExerciseViewHandler) Register(r *chi.Mux) {
 	r.Get(fmt.Sprintf("/exercises/{group:%s}", "[A-Za-z]+"), e.getExercisesForGroupPage)
+	r.Post("/exercises/form/add", e.addExerciseToWorkout)
+	r.Post("/exercises/form/remove", e.removeExerciseFromWorkout)
 }
 
 func (e *ExerciseViewHandler) getExercisesForGroupPage(w http.ResponseWriter, r *http.Request) {
@@ -38,4 +44,53 @@ func (e *ExerciseViewHandler) getExercisesForGroupPage(w http.ResponseWriter, r 
 
 		e.svc.GetExercisesForGroupPage(ctx, group, date, uid).Render(ctx, w)
 	}
+}
+
+func (e *ExerciseViewHandler) removeExerciseFromWorkout(w http.ResponseWriter, r *http.Request) {
+	if uid, ok := util.GetUid(w, r); ok {
+		ctx := r.Context()
+
+		fd, err := readExerciseFormData(r)
+		if err != nil {
+			component.GlobalErrorComponent("Invalid data submission.").Render(ctx, w)
+			return
+		}
+
+		if component := e.svc.RemoveExerciseFromWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
+			component.Render(ctx, w)
+		} else {
+			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s", fd.Group, fd.Date))
+		}
+	}
+}
+
+func (e *ExerciseViewHandler) addExerciseToWorkout(w http.ResponseWriter, r *http.Request) {
+	if uid, ok := util.GetUid(w, r); ok {
+		ctx := r.Context()
+
+		fd, err := readExerciseFormData(r)
+		if err != nil {
+			component.GlobalErrorComponent("Invalid data submission.").Render(ctx, w)
+			return
+		}
+
+		if component := e.svc.AddExerciseToWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
+			component.Render(ctx, w)
+		} else {
+			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s", fd.Group, fd.Date))
+		}
+	}
+}
+
+func readExerciseFormData(r *http.Request) (m.ExerciseFormData, error) {
+	err := r.ParseForm()
+	if err != nil {
+		return m.ExerciseFormData{}, err
+	}
+
+	return m.ExerciseFormData{
+		Date:       r.Form.Get("date"),
+		Group:      r.Form.Get("group"),
+		ExerciseId: r.Form.Get("exerciseId"),
+	}, nil
 }

@@ -5,9 +5,9 @@ import (
     m "github.com/brianfloyd/the-grid/view/model"
 )
 
-templ WorkoutPage(workout m.WorkoutView, groups []m.ExerciseGroupView) {
+templ WorkoutPage(workout m.WorkoutView, gr []m.ExerciseGroupViewResponse) {
     @component.PageWrapperComponent([]string{}) {
-        @component.ExerciseGroupsComponent(groups)
+        @component.ExerciseGroupsComponent(gr)
         @component.WorkoutComponent(workout)
     }
 }

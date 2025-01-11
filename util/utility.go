@@ -27,10 +27,19 @@ func GetUid(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userId := r.CookiesNamed(vm.COOKIE_UID)
 
 	if len(userId) == 0 {
-		w.Header().Add("Location", "/login")
-		w.WriteHeader(301)
+		Redirect(w, "/login")
 		return "", false
 	}
 
 	return userId[0].Value, true
+}
+
+func Redirect(w http.ResponseWriter, location string) {
+	w.Header().Add("Location", location)
+	w.WriteHeader(301)
+}
+
+func HTMXRedirect(w http.ResponseWriter, location string) {
+	w.Header().Add("HX-Redirect", location)
+	w.WriteHeader(200)
 }

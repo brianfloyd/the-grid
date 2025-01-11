@@ -4,10 +4,18 @@ import (
     "fmt"
 )
 
+templ GlobalErrorComponent(message string) {
+    <div class="flex p-4 m-4 bg-red-500 rounded-xl shadow-3xl fade-out absolute" id="global-error" role="alert" hx-swap-oob="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>{message}</span>
+    </div>
+}
+
 templ PageWrapperComponent(css []string) {
     <html>
         @Head(css)
         <body>
+            <div id="global-error"></div>
             { children... }
         </body>
     </html>
@@ -18,8 +26,9 @@ templ Head(css []string) {
     <head>
         <title>The Grid</title>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+        <script src="/static/js/app.js"></script>
 
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"></link>
         <link rel="stylesheet" href="/static/css/tailwind-gen.css"></link>
         <link rel="stylesheet" href="/static/css/app.css"></link>
 

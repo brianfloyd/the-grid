@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/brianfloyd/the-grid/internal/db"
@@ -19,6 +20,7 @@ type IWorkoutService interface {
 	CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error)
 	UpdateSet(ctx context.Context, workoutId string, setId string, set m.Set) (m.Set, error)
 	DeleteSet(ctx context.Context, workoutId string, setId string) error
+	DeleteSets(ctx context.Context, workoutId string, setIds []string) error
 }
 
 type WorkoutRespository interface {
@@ -27,7 +29,7 @@ type WorkoutRespository interface {
 	Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error)
 	CreateSet(ctx context.Context, workoutId string, set m.Set) (m.Set, error)
 	UpdateSet(ctx context.Context, set m.Set) (m.Set, error)
-	DeleteSet(ctx context.Context, setId string) error
+	DeleteSets(ctx context.Context, setIds []string) error
 }
 
 type WorkoutService struct {
@@ -173,31 +175,41 @@ func (w *WorkoutService) UpdateSet(ctx context.Context, workoutId string, setId 
 	return set, nil
 }
 
-func (w *WorkoutService) DeleteSet(ctx context.Context, workoutId string, setId string) error {
-	logger.InfoArgs(ctx, "Deleting set '%s' from workout '%s'.", setId, workoutId)
+func (w *WorkoutService) DeleteSets(ctx context.Context, workoutId string, setIds []string) error {
+	logger.InfoArgs(ctx, "Deleting sets '%v' from workout '%s'.", setIds, workoutId)
 
 	workout, err := w.ById(ctx, workoutId)
 	if err != nil {
 		return err
 	}
+	workoutSetIds := make([]string, len(workout.Sets))
+	for i, set := range workout.Sets {
+		workoutSetIds[i] = set.Id
+	}
 
-	var targetSet *m.Set
-	for i := 0; i < len(workout.Sets); i++ {
-		if workout.Sets[i].Id == setId {
-			targetSet = &workout.Sets[i]
-			break
+	// TODO: Create a reponse object that details which ones were successfully deleted.
+	targetSets := []string{}
+	for _, setId := range setIds {
+		if slices.Contains(workoutSetIds, setId) {
+			targetSets = append(targetSets, setId)
+		} else {
+			logger.WarnArgs(ctx, "Requested set to be deleted (%s) was not a part of workout (%s).")
 		}
 	}
 
-	if targetSet == nil {
-		return &m.WorkoutInvalidInputError{Message: fmt.Sprintf("Workout '%s' does not contain set '%s'.", workoutId, setId)}
+	if len(targetSets) > 0 {
+		err = w.repo.DeleteSets(ctx, targetSets)
+		if err != nil {
+			return errors.Join(&m.GenericWorkoutError{Message: "An unexpected error occurred while deleting a set."}, err)
+		}
 	}
 
-	err = w.repo.DeleteSet(ctx, setId)
-	if err != nil {
-		return errors.Join(&m.GenericWorkoutError{Message: "An unexpected error occurred while deleting a set."}, err)
-	}
 	return nil
+}
+
+func (w *WorkoutService) DeleteSet(ctx context.Context, workoutId string, setId string) error {
+	logger.InfoArgs(ctx, "Deleting set '%s' from workout '%s'.", setId, workoutId)
+	return w.DeleteSets(ctx, workoutId, []string{setId})
 }
 
 func (w *WorkoutService) doesWorkoutExistForDate(ctx context.Context, userId string, date time.Time) (bool, error) {
