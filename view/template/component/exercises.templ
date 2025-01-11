@@ -17,7 +17,7 @@ templ addRemoveExerciseFormComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
 }
 
 templ ExerciseComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
-	<div class="flex">
+	<div class="flex gap-2">
 		<h3>{e.Name}</h3>
 		@addRemoveExerciseFormComponent(m, e)
 	</div>
@@ -41,7 +41,7 @@ templ ExerciseGroupsComponent(g []m.ExerciseGroupViewResponse) {
 
 templ ExerciseGroupComponent(g m.ExerciseGroupViewResponse) {
 	<a href={g.Meta.NavigationLink}>
-		<div class={"border-2 border-red-500", templ.KV("border-4 border-yellow-500", g.View.Selected)}>
+		<div class={"m-2 rounded-full border-4 border-base-content", templ.KV("border-4 border-primary", g.View.Selected)}>
 			<image src={g.View.ImageUrl}></image>
 		</div>
 	</a>

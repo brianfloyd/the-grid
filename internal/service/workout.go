@@ -193,7 +193,7 @@ func (w *WorkoutService) DeleteSets(ctx context.Context, workoutId string, setId
 		if slices.Contains(workoutSetIds, setId) {
 			targetSets = append(targetSets, setId)
 		} else {
-			logger.WarnArgs(ctx, "Requested set to be deleted (%s) was not a part of workout (%s).")
+			logger.WarnArgs(ctx, "Requested set to be deleted (%s) was not a part of workout (%s).", setId, workoutId)
 		}
 	}
 
