@@ -8,11 +8,18 @@ type WorkoutView struct {
 
 type WorkoutGroupView struct {
 	Group GroupDescriptorView
-	Sets  []SetView
+	Count string
+	Sets  []WorkoutSetsView
+}
+
+type WorkoutSetsView struct {
+	WorkoutExerciseView WorkoutExerciseView
+	Count               string
+	CountValue          int
+	Sets                []SetView
 }
 
 type SetView struct {
-	Exercise   WorkoutExerciseView
 	Weight     string
 	WeightType string
 	Reps       string

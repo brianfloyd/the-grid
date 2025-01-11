@@ -4,8 +4,34 @@ import (
     m "github.com/brianfloyd/the-grid/view/model"
 )
 
-templ setComponent(s m.SetView) {
-    <p>{s.Exercise.Name} - {s.Weight} {s.WeightType} - {s.Reps} reps</p>
+templ setComponent(group string, wsv m.WorkoutSetsView) {
+    <div class="collapse collapse-plus bg-base-200">
+        <input type="radio" name={group + "-accordion"}>
+        <h4 class="collapse-title">{wsv.WorkoutExerciseView.Name} ({wsv.Count} sets)</h4>
+        <div class="collapse-content">
+            for _, s := range wsv.Sets {
+                <p>{s.Weight} {s.WeightType} - {s.Reps} reps</p>
+            }
+        </div>
+    </div>
+}
+
+templ collapseExercise(i int, group m.WorkoutGroupView) {
+    <div class="collapse collapse-plus bg-base-200">
+        <input type="radio" name="workout-accordion"
+            if i == 0 {
+                checked="checked"
+            }
+        />
+        <h3 class="collapse-title">{group.Group.FriendlyValue} ({group.Count} exercises)</h3>
+        <div class="collapse-content">
+            <div class="flex flex-wrap gap-2">
+                for _, wsv := range group.Sets {
+                    @setComponent(group.Group.FriendlyValue, wsv)
+                }
+            </div>
+        </div>
+    </div>
 }
 
 templ WorkoutComponent(w m.WorkoutView) {
@@ -14,19 +40,7 @@ templ WorkoutComponent(w m.WorkoutView) {
         <div class="flex flex-wrap gap-2">
             for i, groupKey := range w.PreferredExerciseGroupOrder {
                 if group, ok := w.Groups[groupKey]; ok {
-                    <div class="collapse collapse-plus bg-base-200">
-                        <input type="radio" name="workout-accordion"
-                            if i == 0 {
-                                checked="checked"
-                            }
-                        />
-                        <h3 class="collapse-title">{group.Group.FriendlyValue}</h3>
-                        <div class="collapse-content">
-                                for _, set := range group.Sets {
-                                    @setComponent(set)
-                                }
-                        </div>
-                    </div>
+                    @collapseExercise(i, group)
                 }
             }
         </div>

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -64,12 +65,14 @@ func (s *WorkoutViewService) buildWorkoutGroups(ctx context.Context, workout im.
 	setsByGroup := s.getSetsByGroup(workout.Sets, exercisesById)
 
 	for group, sets := range setsByGroup {
+		setViews := buildSetViews(sets, exercisesById)
 		groupView := m.WorkoutGroupView{
 			Group: m.GroupDescriptorView{
 				Value:         group,
 				FriendlyValue: getFriendlyGroupValue(group),
 			},
-			Sets: buildSetViews(sets, exercisesById),
+			Count: strconv.Itoa(len(setViews)),
+			Sets:  setViews,
 		}
 		mv[group] = groupView
 	}
@@ -77,25 +80,54 @@ func (s *WorkoutViewService) buildWorkoutGroups(ctx context.Context, workout im.
 	return mv
 }
 
-func buildSetViews(sets []im.Set, exercisesById map[string]im.Exercise) []m.SetView {
-	setViews := make([]m.SetView, len(sets))
-	for i, set := range sets {
-		setViews[i] = buildSetView(set, exercisesById)
-	}
-	return setViews
-}
+func buildSetViews(sets []im.Set, exercisesById map[string]im.Exercise) []m.WorkoutSetsView {
+	setViewsMap := make(map[m.WorkoutExerciseView][]m.SetView)
 
-func buildSetView(set im.Set, exercisesById map[string]im.Exercise) m.SetView {
-	exerciseName := "NA"
-	if exercise, ok := exercisesById[set.ExerciseId]; ok {
-		exerciseName = exercise.Name
-	}
+	for _, set := range sets {
+		exerciseName := "NA"
+		if exercise, ok := exercisesById[set.ExerciseId]; ok {
+			exerciseName = exercise.Name
+		}
 
-	return m.SetView{
-		Exercise: m.WorkoutExerciseView{
+		workoutExerciseView := m.WorkoutExerciseView{
 			Id:   set.ExerciseId,
 			Name: exerciseName,
-		},
+		}
+
+		setView := buildSetView(set)
+		if slice, ok := setViewsMap[workoutExerciseView]; ok {
+			slice = append(slice, setView)
+			setViewsMap[workoutExerciseView] = slice
+		} else {
+			setViewsMap[workoutExerciseView] = []m.SetView{setView}
+		}
+
+	}
+
+	workoutSets := make([]m.WorkoutSetsView, len(setViewsMap))
+	i := 0
+	for k, v := range setViewsMap {
+		workoutSets[i] = m.WorkoutSetsView{
+			WorkoutExerciseView: k,
+			Sets:                v,
+			Count:               strconv.Itoa(len(v)),
+			CountValue:          len(v),
+		}
+		i += 1
+	}
+
+	slices.SortFunc(workoutSets, func(a, b m.WorkoutSetsView) int {
+		if a.Count != b.Count {
+			return b.CountValue - a.CountValue
+		}
+		return strings.Compare(a.WorkoutExerciseView.Name, b.WorkoutExerciseView.Name)
+	})
+
+	return workoutSets
+}
+
+func buildSetView(set im.Set) m.SetView {
+	return m.SetView{
 		Weight:     strconv.FormatUint(set.Weight, 10),
 		WeightType: "lbs",
 		Reps:       strconv.FormatUint(set.Reps, 10),
