@@ -1,14 +1,14 @@
-package template
+package component
 
 import (
     m "github.com/brianfloyd/the-grid/view/model"
 )
 
-templ setTemplate(s m.SetView) {
+templ setComponent(s m.SetView) {
     <p>{s.Exercise.Name} - {s.Weight} {s.WeightType} - {s.Reps} reps</p>
 }
 
-templ Workout(w m.WorkoutView) {
+templ WorkoutComponent(w m.WorkoutView) {
     <div class="border-4 border-indigo-500 ">
         <h3>Workout: {w.Date}</h3>
         for _, groupKey := range w.PreferredExerciseGroupOrder {
@@ -17,7 +17,7 @@ templ Workout(w m.WorkoutView) {
                     <h3>{group.Group.FriendlyValue}</h3>
                     <div>
                         for _, set := range group.Sets {
-                            @setTemplate(set)
+                            @setComponent(set)
                         }
                     </div>
                 </div>

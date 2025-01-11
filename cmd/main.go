@@ -51,8 +51,8 @@ func main() {
 
 	// View Services
 	loginViewService := setupLoginViewService(userService)
-	exerciseViewService := setupExerciseViewService(exerciseService)
-	workoutViewService := setupWorkoutViewService(workoutService, exerciseService)
+	exerciseViewService := setupExerciseViewService(exerciseService, workoutService)
+	workoutViewService := setupWorkoutViewService(workoutService, exerciseService, exerciseViewService)
 
 	// Rest handlers
 	setupRestUserHandler(router, userService)
@@ -63,7 +63,6 @@ func main() {
 	setupViewExercisesHandler(router, exerciseViewService)
 	setupViewWorkoutHandler(router, workoutViewService)
 	setupViewLoginHandler(router, loginViewService)
-	setupViewAppHandler(router)
 
 	logger.Info(context.Background(), "Intializing static file content.")
 	fs := http.FileServer(http.Dir("static/"))
@@ -103,8 +102,8 @@ func setupRestExercisesHandler(router *chi.Mux, exercisesService is.IExercisesSe
 	rh.NewExerciseHandler(exercisesService).Register(router)
 }
 
-func setupExerciseViewService(exercisesService is.IExercisesService) vs.IExerciseViewService {
-	exerciseViewService := vs.NewExerciseViewService(exercisesService)
+func setupExerciseViewService(exercisesService is.IExercisesService, workoutService is.IWorkoutService) vs.IExerciseViewService {
+	exerciseViewService := vs.NewExerciseViewService(exercisesService, workoutService)
 	return exerciseViewService
 }
 
@@ -121,12 +120,8 @@ func setupViewLoginHandler(router *chi.Mux, loginViewService vs.ILoginViewServic
 	vh.NewLoginViewHandler(loginViewService).Register(router)
 }
 
-func setupViewAppHandler(router *chi.Mux) {
-	vh.NewAppViewHandler().Register(router)
-}
-
-func setupWorkoutViewService(workoutService is.IWorkoutService, exercisesService is.IExercisesService) vs.IWorkoutViewService {
-	return vs.NewWorkoutViewService(workoutService, exercisesService)
+func setupWorkoutViewService(workoutService is.IWorkoutService, exercisesService is.IExercisesService, exerciseViewService vs.IExerciseViewService) vs.IWorkoutViewService {
+	return vs.NewWorkoutViewService(workoutService, exercisesService, exerciseViewService)
 }
 
 func setupViewWorkoutHandler(router *chi.Mux, workoutViewService vs.IWorkoutViewService) {

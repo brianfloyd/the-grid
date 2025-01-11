@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/brianfloyd/the-grid/util"
 	"github.com/go-chi/chi"
 )
 
 type IExerciseViewService interface {
-	GetExerciseGroups() templ.Component
-	GetExercisesForGroup(ctx context.Context, gruop string) templ.Component
+	GetExercisesForGroupPage(ctx context.Context, group, date, uid string) templ.Component
 }
 
 type ExerciseViewHandler struct {
@@ -25,15 +25,17 @@ func NewExerciseViewHandler(svc IExerciseViewService) *ExerciseViewHandler {
 }
 
 func (e *ExerciseViewHandler) Register(r *chi.Mux) {
-	r.Get("/_t/exercises", e.getExerciseGroups)
-	r.Get(fmt.Sprintf("/_t/exercises/{group:%s}", "[A-Za-z]+"), e.getExercisesForGroup)
+	r.Get(fmt.Sprintf("/exercises/{group:%s}", "[A-Za-z]+"), e.getExercisesForGroupPage)
 }
 
-func (e *ExerciseViewHandler) getExerciseGroups(w http.ResponseWriter, r *http.Request) {
-	e.svc.GetExerciseGroups().Render(r.Context(), w)
-}
+func (e *ExerciseViewHandler) getExercisesForGroupPage(w http.ResponseWriter, r *http.Request) {
+	if uid, ok := util.GetUid(w, r); ok {
+		ctx := r.Context()
+		q := r.URL.Query()
 
-func (e *ExerciseViewHandler) getExercisesForGroup(w http.ResponseWriter, r *http.Request) {
-	group := chi.URLParam(r, "group")
-	e.svc.GetExercisesForGroup(r.Context(), group).Render(r.Context(), w)
+		date := q.Get("date")
+		group := chi.URLParam(r, "group")
+
+		e.svc.GetExercisesForGroupPage(ctx, group, date, uid).Render(ctx, w)
+	}
 }

@@ -1,0 +1,36 @@
+package component
+
+import (
+	m "github.com/brianfloyd/the-grid/view/model"
+)
+
+templ ExercisesComponent(exercises []m.ExerciseView) {
+	<div class="exercises">
+		for _, e := range exercises {
+			<div class="exercise">
+				<h3>{e.Name}</h3>
+				if e.InWorkout {
+					<span> REMOVE </span>
+				} else {
+					<span> ADD </span>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ ExerciseGroupsComponent(g []m.ExerciseGroupView) {
+	<div class="border-2 border-black-500 flex flex-wrap">
+		for _, groupView := range g {
+			@ExerciseGroupComponent(groupView)
+		}
+	</div>
+}
+
+templ ExerciseGroupComponent(g m.ExerciseGroupView) {
+	<a href={g.NavigationLink}>
+		<div class={"border-2 border-red-500", templ.KV("border-4 border-yellow-500", g.Selected)}>
+			<image src={g.ImageUrl}></image>
+		</div>
+	</a>
+}

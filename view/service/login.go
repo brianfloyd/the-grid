@@ -7,7 +7,7 @@ import (
 	im "github.com/brianfloyd/the-grid/internal/model"
 	is "github.com/brianfloyd/the-grid/internal/service"
 	m "github.com/brianfloyd/the-grid/view/model"
-	"github.com/brianfloyd/the-grid/view/template"
+	"github.com/brianfloyd/the-grid/view/template/page"
 )
 
 type ILoginViewService interface {
@@ -30,7 +30,7 @@ func (l *LoginViewService) GetLoginPage(ctx context.Context) templ.Component {
 		panic("crash")
 	}
 	userViews := makeUserViews(users)
-	return template.LoginPage(userViews)
+	return page.LoginPage(userViews)
 }
 
 func makeUserViews(users []im.User) []m.UserView {

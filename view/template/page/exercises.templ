@@ -1,0 +1,13 @@
+package page
+
+import (
+	m "github.com/brianfloyd/the-grid/view/model"
+    "github.com/brianfloyd/the-grid/view/template/component"
+)
+
+templ ExercisePage(groupViews []m.ExerciseGroupView, exercises []m.ExerciseView) {
+    @component.PageWrapperComponent([]string{}) {
+        @component.ExerciseGroupsComponent(groupViews)
+        @component.ExercisesComponent(exercises)
+    }
+}

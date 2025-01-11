@@ -1,0 +1,30 @@
+package component
+
+import (
+    "fmt"
+)
+
+templ PageWrapperComponent(css []string) {
+    <html>
+        @Head(css)
+        <body>
+            { children... }
+        </body>
+    </html>
+
+}
+
+templ Head(css []string) {
+    <head>
+        <title>The Grid</title>
+        <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+
+        <link rel="stylesheet" href="/static/css/tailwind-gen.css"></link>
+        <link rel="stylesheet" href="/static/css/app.css"></link>
+
+        for _, c := range css {
+            <link rel="stylesheet" href={fmt.Sprintf("/static/css/%s", c)}></link>
+        }
+    </head>
+}

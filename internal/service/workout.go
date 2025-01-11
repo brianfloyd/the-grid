@@ -9,6 +9,7 @@ import (
 	"github.com/brianfloyd/the-grid/internal/db"
 	"github.com/brianfloyd/the-grid/internal/logger"
 	m "github.com/brianfloyd/the-grid/internal/model"
+	"github.com/brianfloyd/the-grid/util"
 )
 
 type IWorkoutService interface {
@@ -44,7 +45,7 @@ func NewWorkoutService(repo WorkoutRespository, userSvc IUserService) *WorkoutSe
 func (w *WorkoutService) Create(ctx context.Context, userId string, workout m.Workout) (m.Workout, error) {
 	logger.InfoArgs(ctx, "Creating workout (%v) for user (%s).", workout, userId)
 
-	date, err := sanitizeDate(workout.Date)
+	date, err := util.SanitizeDate(workout.Date)
 	if err != nil {
 		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
 	}
@@ -98,12 +99,12 @@ func (w *WorkoutService) ById(ctx context.Context, id string) (m.Workout, error)
 }
 
 func (w *WorkoutService) ByDate(ctx context.Context, userId string, dateString string) (m.Workout, error) {
-	date, err := sanitizeDate(dateString)
+	date, err := util.SanitizeDate(dateString)
 	if err != nil {
-		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the MM/DD/YYYY format."}
+		return m.Workout{}, &m.WorkoutInvalidInputError{Message: "The given date is not in the correct format."}
 	}
 
-	workout, err := w.repo.ByDate(ctx, userId, makeDateStringFromTime(date))
+	workout, err := w.repo.ByDate(ctx, userId, util.MakeDateStringFromTime(date))
 	if err != nil {
 		workoutNotFoundError := &m.WorkoutNotFoundError{}
 
@@ -200,7 +201,7 @@ func (w *WorkoutService) DeleteSet(ctx context.Context, workoutId string, setId 
 }
 
 func (w *WorkoutService) doesWorkoutExistForDate(ctx context.Context, userId string, date time.Time) (bool, error) {
-	dateStr := makeDateStringFromTime(date)
+	dateStr := util.MakeDateStringFromTime(date)
 
 	_, err := w.repo.ByDate(ctx, userId, dateStr)
 
@@ -213,16 +214,4 @@ func (w *WorkoutService) doesWorkoutExistForDate(ctx context.Context, userId str
 	}
 
 	return false, err
-}
-
-func makeDateStringFromTime(date time.Time) string {
-	return date.Format("1/2/2006")
-}
-
-func sanitizeDate(date string) (time.Time, error) {
-	t, err := time.Parse("01/02/2006", date)
-	if err != nil {
-		return time.Time{}, errors.New("could not convert given string to the MM/DD/YYYY time format")
-	}
-	return t, nil
 }

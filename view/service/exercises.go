@@ -2,43 +2,57 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/a-h/templ"
+	"github.com/brianfloyd/the-grid/internal/logger"
 	im "github.com/brianfloyd/the-grid/internal/model"
 	is "github.com/brianfloyd/the-grid/internal/service"
+	"github.com/brianfloyd/the-grid/util"
 	m "github.com/brianfloyd/the-grid/view/model"
-	"github.com/brianfloyd/the-grid/view/template"
+	"github.com/brianfloyd/the-grid/view/template/page"
 )
 
 type IExerciseViewService interface {
-	GetExerciseGroups() templ.Component
-	GetExercisesForGroup(ctx context.Context, group string) templ.Component
+	GetExercisesForGroupPage(ctx context.Context, group, date, uid string) templ.Component
+	GetGroupViews(date string) []m.ExerciseGroupView
 }
 
 type ExerciseViewService struct {
-	svc is.IExercisesService
+	exerciseService is.IExercisesService
+	workoutService  is.IWorkoutService
 }
 
-func NewExerciseViewService(svc is.IExercisesService) *ExerciseViewService {
+func NewExerciseViewService(exerciseService is.IExercisesService, workoutService is.IWorkoutService) *ExerciseViewService {
 	return &ExerciseViewService{
-		svc: svc,
+		exerciseService: exerciseService,
+		workoutService:  workoutService,
 	}
 }
 
-func (e *ExerciseViewService) GetExerciseGroups() templ.Component {
-	return template.GetExerciseGroups(getGroups())
-}
-
-func (e *ExerciseViewService) GetExercisesForGroup(ctx context.Context, group string) templ.Component {
-	groups := getGroups()
-	for i := 0; i < len(groups); i++ {
-		if groups[i].Name == group {
-			groups[i].Selected = true
-			break
-		}
+func (e *ExerciseViewService) GetExercisesForGroupPage(ctx context.Context, group, date, uid string) templ.Component {
+	if _, err := util.SanitizeDate(date); err != nil {
+		date = util.MakeDateStringFromTime(time.Now())
 	}
 
-	exercises, err := e.svc.ListForGroup(ctx, group)
+	groups := UpdateSelectedGroupProperties(e.GetGroupViews(date), group, date)
+	viewExercises := e.GetExerciseViews(ctx, group)
+
+	workout, err := e.workoutService.ByDate(ctx, uid, date)
+	if err != nil {
+		logger.ErrorArgs(ctx, "Could not get workout by date (%v)! %v\n", date, err)
+	} else {
+		viewExercises = UpdateExercisesForWorkoutState(viewExercises, workout)
+	}
+
+	return page.ExercisePage(groups, viewExercises)
+}
+
+func (e *ExerciseViewService) GetExerciseViews(ctx context.Context, group string) []m.ExerciseView {
+	exercises, err := e.exerciseService.ListForGroup(ctx, group)
 	if err != nil {
 		panic("HANDLE ME")
 	}
@@ -46,56 +60,53 @@ func (e *ExerciseViewService) GetExercisesForGroup(ctx context.Context, group st
 	viewExercises := make([]m.ExerciseView, len(exercises))
 	for i, e := range exercises {
 		viewExercises[i] = m.ExerciseView{
-			Id:    e.Id,
-			Name:  e.Name,
-			Group: string(e.Group),
+			Id:        e.Id,
+			Name:      e.Name,
+			Group:     string(e.Group),
+			InWorkout: false,
 		}
 	}
 
-	return template.SelectedExerciseGroup(groups, viewExercises)
+	return viewExercises
 }
 
-func getGroups() []m.ExerciseGroupView {
-	return []m.ExerciseGroupView{
-		{
-			Name:     string(im.ExerciseGroupBiceps),
-			ImageUrl: "/static/images/icons/bicep.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupBack),
-			ImageUrl: "/static/images/icons/back.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupTricep),
-			ImageUrl: "/static/images/icons/tricep.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupChest),
-			ImageUrl: "/static/images/icons/chest.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupShoulder),
-			ImageUrl: "/static/images/icons/shoulder.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupLegs),
-			ImageUrl: "/static/images/icons/legs.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupAbs),
-			ImageUrl: "/static/images/icons/abs.png",
-			Selected: false,
-		},
-		{
-			Name:     string(im.ExerciseGroupCardio),
-			ImageUrl: "/static/images/icons/misc.png",
-			Selected: false,
-		},
+func (e *ExerciseViewService) GetGroupViews(date string) []m.ExerciseGroupView {
+	groupViews := make([]m.ExerciseGroupView, len(im.ExerciseGroupAll))
+	for i, e := range im.ExerciseGroupAll {
+		groupViews[i] = buildGroupView(e, date)
+	}
+	return groupViews
+}
+
+func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout im.Workout) []m.ExerciseView {
+	exerciseIdsInWorkout := []string{}
+	for _, set := range workout.Sets {
+		exerciseIdsInWorkout = append(exerciseIdsInWorkout, set.ExerciseId)
+	}
+
+	for i := 0; i < len(viewExercises); i++ {
+		viewExercises[i].InWorkout = slices.Contains(exerciseIdsInWorkout, viewExercises[i].Id)
+	}
+	return viewExercises
+}
+
+func UpdateSelectedGroupProperties(groups []m.ExerciseGroupView, group string, date string) []m.ExerciseGroupView {
+	for i := 0; i < len(groups); i++ {
+		if strings.EqualFold(groups[i].Name, group) {
+			groups[i].Selected = true
+			groups[i].NavigationLink = templ.SafeURL(fmt.Sprintf("/%s", date))
+			break
+		}
+	}
+	return groups
+}
+
+func buildGroupView(group im.ExerciseGroup, date string) m.ExerciseGroupView {
+	lower := strings.ToLower(string(group))
+	return m.ExerciseGroupView{
+		Name:           string(group),
+		ImageUrl:       fmt.Sprintf("/static/images/icons/%s.png", lower),
+		Selected:       false,
+		NavigationLink: templ.SafeURL(fmt.Sprintf("/exercises/%s?date=%s", lower, date)),
 	}
 }

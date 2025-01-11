@@ -1,8 +1,10 @@
-package template
+package page
 
 import (
     "fmt"
     m "github.com/brianfloyd/the-grid/view/model"
+
+	"github.com/brianfloyd/the-grid/view/template/component"
 )
 
 templ user(user m.UserView) {
@@ -20,10 +22,7 @@ templ users(users []m.UserView) {
 }
 
 templ LoginPage(u []m.UserView) {
-    <html>
-        @Head([]string{"app.css"})
-        <body>
-            @users(u) 
-        </body>
-    </html>
+    @component.PageWrapperComponent([]string{}) {
+        @users(u)
+    }
 }

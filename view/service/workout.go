@@ -4,13 +4,15 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/brianfloyd/the-grid/internal/logger"
 	im "github.com/brianfloyd/the-grid/internal/model"
 	is "github.com/brianfloyd/the-grid/internal/service"
+	"github.com/brianfloyd/the-grid/util"
 	m "github.com/brianfloyd/the-grid/view/model"
-	"github.com/brianfloyd/the-grid/view/template"
+	"github.com/brianfloyd/the-grid/view/template/page"
 )
 
 type IWorkoutViewService interface {
@@ -18,18 +20,26 @@ type IWorkoutViewService interface {
 }
 
 type WorkoutViewService struct {
-	workoutService   is.IWorkoutService
-	exercisesService is.IExercisesService
+	workoutService      is.IWorkoutService
+	exercisesService    is.IExercisesService
+	exerciseViewService IExerciseViewService
 }
 
-func NewWorkoutViewService(workoutService is.IWorkoutService, exercisesService is.IExercisesService) *WorkoutViewService {
+func NewWorkoutViewService(workoutService is.IWorkoutService, exercisesService is.IExercisesService, exerciseViewService IExerciseViewService) *WorkoutViewService {
 	return &WorkoutViewService{
-		workoutService:   workoutService,
-		exercisesService: exercisesService,
+		workoutService:      workoutService,
+		exercisesService:    exercisesService,
+		exerciseViewService: exerciseViewService,
 	}
 }
 
 func (s *WorkoutViewService) GetWorkout(ctx context.Context, date string, uid string) templ.Component {
+	if _, err := util.SanitizeDate(date); err != nil {
+		date = util.MakeDateStringFromTime(time.Now())
+	}
+
+	groups := s.exerciseViewService.GetGroupViews(date)
+
 	workoutView := m.WorkoutView{
 		Date:                        date,
 		PreferredExerciseGroupOrder: getPreferredExerciseGroupOrder(),
@@ -44,7 +54,7 @@ func (s *WorkoutViewService) GetWorkout(ctx context.Context, date string, uid st
 		logger.ErrorArgs(ctx, "Could not load workout for date '%s'. %s\n", date, err)
 	}
 
-	return template.Workout(workoutView)
+	return page.WorkoutPage(workoutView, groups)
 }
 
 func (s *WorkoutViewService) buildWorkoutGroups(ctx context.Context, workout im.Workout) map[string]m.WorkoutGroupView {

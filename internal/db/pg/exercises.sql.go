@@ -71,7 +71,7 @@ func (q *ExercisesQueries) List(ctx context.Context) ([]m.Exercise, error) {
 
 func (q *ExercisesQueries) ListForGroup(ctx context.Context, group string) ([]m.Exercise, error) {
 	const ListExercisesForGroup = `
-		select exr_id, exr_group, exr_name from the_grid_go.exercise where exr_group = $1
+		select exr_id, exr_group, exr_name from the_grid_go.exercise where exr_group = upper($1)
 	`
 
 	tx, err := q.db.BeginTx(ctx, pgx.TxOptions{

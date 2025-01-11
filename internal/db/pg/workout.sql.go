@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/brianfloyd/the-grid/internal/db"
+	"github.com/brianfloyd/the-grid/internal/logger"
 	m "github.com/brianfloyd/the-grid/internal/model"
 	"github.com/jackc/pgx/v5"
 )
@@ -121,17 +122,20 @@ func (q *WorkoutQueries) ByDate(ctx context.Context, args ByDateParams) (m.Worko
 		return m.Workout{}, err
 	}
 
+	logger.TraceArgs(ctx, "Scanning for workout with date (%s).", args.date)
 	workout, err := scanWorkout(tx.QueryRow(ctx, SelectWorkoutByDate, args.userId, args.date))
 	if err != nil {
 		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
 
+	logger.TraceArgs(ctx, "Selecting sets for workout with id (%s).", workout.Id)
 	rows, err := tx.Query(ctx, SelectSetsByWorkoutId, workout.Id)
 	if err != nil {
 		tx.Rollback(ctx)
 		return m.Workout{}, err
 	}
+
 	sets, err := scanSets(rows)
 	if err != nil {
 		tx.Rollback(ctx)
