@@ -56,11 +56,7 @@ func (e *ExerciseViewHandler) removeExerciseFromWorkout(w http.ResponseWriter, r
 			return
 		}
 
-		if component := e.svc.RemoveExerciseFromWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
-			component.Render(ctx, w)
-		} else {
-			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s#%s", fd.Group, fd.Date, fd.TargetId))
-		}
+		e.svc.RemoveExerciseFromWorkout(ctx, fd.ExerciseId, fd.Date, uid).Render(ctx, w)
 	}
 }
 
@@ -74,11 +70,7 @@ func (e *ExerciseViewHandler) addExerciseToWorkout(w http.ResponseWriter, r *htt
 			return
 		}
 
-		if component := e.svc.AddExerciseToWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
-			component.Render(ctx, w)
-		} else {
-			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s#%s", fd.Group, fd.Date, fd.TargetId))
-		}
+		e.svc.AddExerciseToWorkout(ctx, fd.ExerciseId, fd.Date, uid).Render(ctx, w)
 	}
 }
 

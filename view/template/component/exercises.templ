@@ -5,9 +5,8 @@ import (
 )
 
 templ addRemoveExerciseFormComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
-	<form hx-post={string(e.Form.SubmitURL)} hx-indicator={"#" + e.Form.IndicatorId} hx-disabled-elt={e.Form.DisableInputTarget} hx-swap="none">
+	<form hx-post={string(e.Form.SubmitURL)} hx-indicator={"#" + e.Form.IndicatorId} hx-disabled-elt={e.Form.DisableInputTarget}>
 		<input type="text" name="exerciseId" value={e.Id} hidden/>
-		<input type="text" name="targetId" value={e.Form.TargetId} hidden/>
 		<input type="text" name="date" value={m.Date} hidden/>
 		<input type="text" name="group" value={e.Group} hidden/>
 		<div>
@@ -18,7 +17,7 @@ templ addRemoveExerciseFormComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
 }
 
 templ ExerciseComponent(m m.ExerciseViewMeta, e m.ExerciseView) {
-	<div class="flex gap-1 justify-between text-6xl" id={e.Form.TargetId}>
+	<div class="flex gap-1 justify-between text-6xl" hx-swap="outerHTML" hx-target="this">
 		<p>{e.Name}</p>
 		@addRemoveExerciseFormComponent(m, e)
 	</div>

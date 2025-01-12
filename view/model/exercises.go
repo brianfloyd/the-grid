@@ -29,7 +29,6 @@ type ExerciseViewForm struct {
 	DisableInputTarget string
 	SubmitButtonText   string
 	IndicatorId        string
-	TargetId           string
 }
 
 type ExerciseViewMeta struct {
@@ -47,3 +46,8 @@ type ExerciseFormData struct {
 	ExerciseId string
 	TargetId   string
 }
+
+type ExerciseFormType string
+
+const ExerciseFormAdd ExerciseFormType = "Add"
+const ExerciseFormRemove ExerciseFormType = "Remove"

@@ -16,6 +16,7 @@ import (
 	m "github.com/brianfloyd/the-grid/view/model"
 	"github.com/brianfloyd/the-grid/view/template/component"
 	"github.com/brianfloyd/the-grid/view/template/page"
+	"github.com/google/uuid"
 )
 
 type IExerciseViewService interface {
@@ -62,6 +63,24 @@ func (e *ExerciseViewService) RemoveExerciseFromWorkout(ctx context.Context, exe
 		date = util.MakeDateStringFromTime(time.Now())
 	}
 
+	exercises, err := e.exerciseService.List(ctx)
+	if err != nil {
+		logger.ErrorArgs(ctx, "Could not get all exercises. %v\n", err)
+		return component.GlobalErrorComponent("An error occurred getting all exercises.")
+	}
+
+	var exercise *im.Exercise
+	for _, e := range exercises {
+		if e.Id == exerciseId {
+			exercise = &e
+		}
+	}
+
+	if exercise == nil {
+		logger.ErrorArgs(ctx, "Could not find exercise for id (%s).\n", exerciseId)
+		return component.GlobalErrorComponent("Could not find an exercise matching the specified id.")
+	}
+
 	workout, err := e.workoutService.ByDate(ctx, uid, date)
 	if err != nil {
 		logger.ErrorArgs(ctx, "Could not get workout by date (%s). %v\n", date, err)
@@ -81,7 +100,18 @@ func (e *ExerciseViewService) RemoveExerciseFromWorkout(ctx context.Context, exe
 		return component.GlobalErrorComponent("An error occurred removing the exercise from the workout.")
 	}
 
-	return nil
+	ev := m.ExerciseView{
+		Id:    exercise.Id,
+		Group: string(exercise.Group),
+		Name:  exercise.Name,
+		Form:  buildExerciseForm(m.ExerciseFormAdd),
+	}
+
+	m := m.ExerciseViewMeta{
+		Date: date,
+	}
+
+	return component.ExerciseComponent(m, ev)
 }
 
 func (e *ExerciseViewService) AddExerciseToWorkout(ctx context.Context, exerciseId, date, uid string) templ.Component {
@@ -114,31 +144,48 @@ func (e *ExerciseViewService) AddExerciseToWorkout(ctx context.Context, exercise
 			logger.ErrorArgs(ctx, "Could not load workout by date (%s). %v\n", date, err)
 			return component.GlobalErrorComponent("Could not load the workout for the specified date.")
 		}
-		return e.createNewWorkoutWithExercise(ctx, uid, date, exerciseId)
+
+		if err := e.createNewWorkoutWithExercise(ctx, uid, date, exerciseId); err != nil {
+			return component.GlobalErrorComponent("Failed to create a new workout and assign the exercise.")
+		}
 	} else {
+		hasExercise := false
 		for _, set := range workout.Sets {
 			if set.ExerciseId == exerciseId {
 				logger.WarnArgs(ctx, "Workout (%s) already had the exercise (%s).", workout.Id, exerciseId)
-				return nil
+				hasExercise = true
 			}
 		}
 
-		// TODO: Get default reps, weight, count, etc.
-		_, err = e.workoutService.CreateSet(ctx, workout.Id, im.Set{
-			ExerciseId: exerciseId,
-		})
+		if !hasExercise {
+			// TODO: Get default reps, weight, count, etc.
+			_, err = e.workoutService.CreateSet(ctx, workout.Id, im.Set{
+				ExerciseId: exerciseId,
+			})
 
-		if err != nil {
-			logger.ErrorArgs(ctx, "Could not add exercise (%s) to workout (%s). %v\n", exerciseId, workout.Id, err)
-			return component.GlobalErrorComponent("An error occurred adding the exercise to the workout.")
+			if err != nil {
+				logger.ErrorArgs(ctx, "Could not add exercise (%s) to workout (%s). %v\n", exerciseId, workout.Id, err)
+				return component.GlobalErrorComponent("An error occurred adding the exercise to the workout.")
+			}
 		}
-
-		return nil
 	}
+
+	ev := m.ExerciseView{
+		Id:    exercise.Id,
+		Group: string(exercise.Group),
+		Name:  exercise.Name,
+		Form:  buildExerciseForm(m.ExerciseFormRemove),
+	}
+
+	m := m.ExerciseViewMeta{
+		Date: date,
+	}
+
+	return component.ExerciseComponent(m, ev)
 
 }
 
-func (e *ExerciseViewService) createNewWorkoutWithExercise(ctx context.Context, uid, date, exerciseId string) templ.Component {
+func (e *ExerciseViewService) createNewWorkoutWithExercise(ctx context.Context, uid, date, exerciseId string) error {
 	_, err := e.workoutService.Create(ctx, uid, im.Workout{
 		Date: date,
 		Sets: []im.Set{
@@ -149,8 +196,8 @@ func (e *ExerciseViewService) createNewWorkoutWithExercise(ctx context.Context, 
 	})
 
 	if err != nil {
-		logger.ErrorArgs(ctx, "Could not create a new workout on date (%s) with exercise id (%s). %v\n", date, exerciseId)
-		return component.GlobalErrorComponent("Failed to create a new workout.")
+		logger.ErrorArgs(ctx, "Could not create a new workout on date (%s) with exercise id (%s). %v", date, exerciseId, err)
+		return errors.New("failed to create a new workout")
 	}
 
 	return nil
@@ -200,23 +247,11 @@ func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout *im.
 	}
 
 	for i := 0; i < len(viewExercises); i++ {
+		kind := m.ExerciseFormRemove
 		if !slices.Contains(exerciseIdsInWorkout, viewExercises[i].Id) {
-			viewExercises[i].Form = m.ExerciseViewForm{
-				SubmitButtonText:   "Add",
-				SubmitURL:          templ.SafeURL("/exercises/form/add"),
-				DisableInputTarget: "[add-remove-btn]",
-				IndicatorId:        fmt.Sprintf("submit-indicator-%d", i),
-				TargetId:           fmt.Sprintf("exr-%s", viewExercises[i].Id),
-			}
-		} else {
-			viewExercises[i].Form = m.ExerciseViewForm{
-				SubmitButtonText:   "Remove",
-				SubmitURL:          templ.SafeURL("/exercises/form/remove"),
-				DisableInputTarget: "[add-remove-btn]",
-				IndicatorId:        fmt.Sprintf("submit-indicator-%d", i),
-				TargetId:           fmt.Sprintf("exr-%s", viewExercises[i].Id),
-			}
+			kind = m.ExerciseFormAdd
 		}
+		viewExercises[i].Form = buildExerciseForm(kind)
 	}
 	return viewExercises
 }
@@ -243,5 +278,22 @@ func buildGroupView(group im.ExerciseGroup, date string) m.ExerciseGroupViewResp
 		Meta: m.ExerciseGroupViewMeta{
 			NavigationLink: templ.SafeURL(fmt.Sprintf("/exercises/%s?date=%s", lower, date)),
 		},
+	}
+}
+
+func buildExerciseForm(kind m.ExerciseFormType) m.ExerciseViewForm {
+	return m.ExerciseViewForm{
+		SubmitURL:          getExerciseViewFormSubmitUrl(kind),
+		DisableInputTarget: "[add-remove-btn]",
+		SubmitButtonText:   string(kind),
+		IndicatorId:        "submit-indicator-" + uuid.NewString(),
+	}
+}
+
+func getExerciseViewFormSubmitUrl(kind m.ExerciseFormType) templ.SafeURL {
+	if kind == m.ExerciseFormAdd {
+		return templ.SafeURL("/exercises/form/add")
+	} else {
+		return templ.SafeURL("/exercises/form/remove")
 	}
 }
