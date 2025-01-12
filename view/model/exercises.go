@@ -29,6 +29,7 @@ type ExerciseViewForm struct {
 	DisableInputTarget string
 	SubmitButtonText   string
 	IndicatorId        string
+	TargetId           string
 }
 
 type ExerciseViewMeta struct {
@@ -44,4 +45,5 @@ type ExerciseFormData struct {
 	Date       string
 	Group      string
 	ExerciseId string
+	TargetId   string
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -44,12 +45,14 @@ func (e *ExerciseViewService) GetExercisesForGroupPage(ctx context.Context, grou
 	groups := UpdateSelectedGroupProperties(e.GetGroupViews(date), group, date)
 	viewExercises := e.GetExerciseViews(ctx, group)
 
+	var state *im.Workout
 	workout, err := e.workoutService.ByDate(ctx, uid, date)
-	if err != nil {
-		logger.ErrorArgs(ctx, "Could not get workout by date (%v)! %v\n", date, err)
+	if err == nil {
+		state = &workout
 	} else {
-		viewExercises = UpdateExercisesForWorkoutState(viewExercises, workout)
+		logger.ErrorArgs(ctx, "Could not get workout by date (%v)! %v\n", date, err)
 	}
+	viewExercises = UpdateExercisesForWorkoutState(viewExercises, state)
 
 	return page.ExercisePage(groups, buildExerciseViewResponse(viewExercises, date))
 }
@@ -74,7 +77,7 @@ func (e *ExerciseViewService) RemoveExerciseFromWorkout(ctx context.Context, exe
 
 	err = e.workoutService.DeleteSets(ctx, workout.Id, setIds)
 	if err != nil {
-		logger.ErrorArgs(ctx, "Could not remove exercises from workout.", exerciseId, workout.Id, err)
+		logger.ErrorArgs(ctx, "Could not remove exercise (%s) from workout (%s). %v\n", exerciseId, workout.Id, err)
 		return component.GlobalErrorComponent("An error occurred removing the exercise from the workout.")
 	}
 
@@ -106,25 +109,48 @@ func (e *ExerciseViewService) AddExerciseToWorkout(ctx context.Context, exercise
 
 	workout, err := e.workoutService.ByDate(ctx, uid, date)
 	if err != nil {
-		logger.ErrorArgs(ctx, "Could not get workout by date (%s). %v\n", date, err)
-		return component.GlobalErrorComponent("Could not find a workout for the current date.")
-	}
-
-	for _, set := range workout.Sets {
-		if set.ExerciseId == exerciseId {
-			logger.WarnArgs(ctx, "Workout (%s) already had the exercise (%s).", workout.Id, exerciseId)
-			return nil
+		notFoundError := &im.WorkoutNotFoundError{}
+		if !errors.As(err, &notFoundError) {
+			logger.ErrorArgs(ctx, "Could not load workout by date (%s). %v\n", date, err)
+			return component.GlobalErrorComponent("Could not load the workout for the specified date.")
 		}
+		return e.createNewWorkoutWithExercise(ctx, uid, date, exerciseId)
+	} else {
+		for _, set := range workout.Sets {
+			if set.ExerciseId == exerciseId {
+				logger.WarnArgs(ctx, "Workout (%s) already had the exercise (%s).", workout.Id, exerciseId)
+				return nil
+			}
+		}
+
+		// TODO: Get default reps, weight, count, etc.
+		_, err = e.workoutService.CreateSet(ctx, workout.Id, im.Set{
+			ExerciseId: exerciseId,
+		})
+
+		if err != nil {
+			logger.ErrorArgs(ctx, "Could not add exercise (%s) to workout (%s). %v\n", exerciseId, workout.Id, err)
+			return component.GlobalErrorComponent("An error occurred adding the exercise to the workout.")
+		}
+
+		return nil
 	}
 
-	// TODO: Get default reps, weight, count, etc.
-	_, err = e.workoutService.CreateSet(ctx, workout.Id, im.Set{
-		ExerciseId: exerciseId,
+}
+
+func (e *ExerciseViewService) createNewWorkoutWithExercise(ctx context.Context, uid, date, exerciseId string) templ.Component {
+	_, err := e.workoutService.Create(ctx, uid, im.Workout{
+		Date: date,
+		Sets: []im.Set{
+			{
+				ExerciseId: exerciseId,
+			},
+		},
 	})
 
 	if err != nil {
-		logger.ErrorArgs(ctx, "Could not add exercise (%s) to workout (%s). %v\n", exerciseId, workout.Id, err)
-		return component.GlobalErrorComponent("An error occurred adding the exercise to the workout.")
+		logger.ErrorArgs(ctx, "Could not create a new workout on date (%s) with exercise id (%s). %v\n", date, exerciseId)
+		return component.GlobalErrorComponent("Failed to create a new workout.")
 	}
 
 	return nil
@@ -165,10 +191,12 @@ func (e *ExerciseViewService) GetGroupViews(date string) []m.ExerciseGroupViewRe
 	return groupViews
 }
 
-func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout im.Workout) []m.ExerciseView {
+func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout *im.Workout) []m.ExerciseView {
 	exerciseIdsInWorkout := []string{}
-	for _, set := range workout.Sets {
-		exerciseIdsInWorkout = append(exerciseIdsInWorkout, set.ExerciseId)
+	if workout != nil {
+		for _, set := range workout.Sets {
+			exerciseIdsInWorkout = append(exerciseIdsInWorkout, set.ExerciseId)
+		}
 	}
 
 	for i := 0; i < len(viewExercises); i++ {
@@ -178,6 +206,7 @@ func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout im.W
 				SubmitURL:          templ.SafeURL("/exercises/form/add"),
 				DisableInputTarget: "[add-remove-btn]",
 				IndicatorId:        fmt.Sprintf("submit-indicator-%d", i),
+				TargetId:           fmt.Sprintf("exr-%s", viewExercises[i].Id),
 			}
 		} else {
 			viewExercises[i].Form = m.ExerciseViewForm{
@@ -185,6 +214,7 @@ func UpdateExercisesForWorkoutState(viewExercises []m.ExerciseView, workout im.W
 				SubmitURL:          templ.SafeURL("/exercises/form/remove"),
 				DisableInputTarget: "[add-remove-btn]",
 				IndicatorId:        fmt.Sprintf("submit-indicator-%d", i),
+				TargetId:           fmt.Sprintf("exr-%s", viewExercises[i].Id),
 			}
 		}
 	}

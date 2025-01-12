@@ -59,7 +59,7 @@ func (e *ExerciseViewHandler) removeExerciseFromWorkout(w http.ResponseWriter, r
 		if component := e.svc.RemoveExerciseFromWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
 			component.Render(ctx, w)
 		} else {
-			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s", fd.Group, fd.Date))
+			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s#%s", fd.Group, fd.Date, fd.TargetId))
 		}
 	}
 }
@@ -77,7 +77,7 @@ func (e *ExerciseViewHandler) addExerciseToWorkout(w http.ResponseWriter, r *htt
 		if component := e.svc.AddExerciseToWorkout(ctx, fd.ExerciseId, fd.Date, uid); component != nil {
 			component.Render(ctx, w)
 		} else {
-			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s", fd.Group, fd.Date))
+			util.HTMXRedirect(w, fmt.Sprintf("/exercises/%s?date=%s#%s", fd.Group, fd.Date, fd.TargetId))
 		}
 	}
 }
@@ -92,5 +92,6 @@ func readExerciseFormData(r *http.Request) (m.ExerciseFormData, error) {
 		Date:       r.Form.Get("date"),
 		Group:      r.Form.Get("group"),
 		ExerciseId: r.Form.Get("exerciseId"),
+		TargetId:   r.Form.Get("targetId"),
 	}, nil
 }

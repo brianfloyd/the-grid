@@ -41,5 +41,6 @@ func Redirect(w http.ResponseWriter, location string) {
 
 func HTMXRedirect(w http.ResponseWriter, location string) {
 	w.Header().Add("HX-Redirect", location)
+	w.Header().Add("HX-Refresh", "true")
 	w.WriteHeader(200)
 }

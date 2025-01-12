@@ -108,9 +108,7 @@ func (w *WorkoutService) ByDate(ctx context.Context, userId string, dateString s
 
 	workout, err := w.repo.ByDate(ctx, userId, util.MakeDateStringFromTime(date))
 	if err != nil {
-		workoutNotFoundError := &m.WorkoutNotFoundError{}
-
-		if errors.As(err, &workoutNotFoundError) {
+		if errors.Is(err, db.ErrDbNotFound) {
 			return m.Workout{}, &m.WorkoutNotFoundError{Message: "Workout not found for the given user and date."}
 		} else {
 			return m.Workout{}, errors.Join(&m.GenericWorkoutError{Message: "Generic workout error."}, err)
