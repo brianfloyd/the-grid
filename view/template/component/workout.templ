@@ -35,7 +35,7 @@ templ collapseExercise(i int, group m.WorkoutGroupView) {
 }
 
 templ WorkoutComponent(w m.WorkoutView) {
-    <div class="border-4 border-primary-500">
+    <div class="border-4 border-primary-500 text-6xl">
         <h3>Workout: {w.Date}</h3>
         <div class="flex flex-wrap gap-2">
             for i, groupKey := range w.PreferredExerciseGroupOrder {
