@@ -44,6 +44,7 @@ func main() {
 	router.Use(middleware.RequestID, logger.Middleware, middleware.Recoverer)
 
 	logger.Info(context.Background(), "Initializing services.")
+
 	// Internal Services
 	userService := setupUserService(pool)
 	workoutService := setupWorkoutService(pool, userService)
@@ -52,6 +53,7 @@ func main() {
 	// View Services
 	loginViewService := setupLoginViewService(userService)
 	exerciseViewService := setupExerciseViewService(exerciseService, workoutService)
+	exerciseDefaultViewSerivce := setupExerciseDefaultViewService(exerciseService, exerciseViewService)
 	workoutViewService := setupWorkoutViewService(workoutService, exerciseService, exerciseViewService)
 
 	// Rest handlers
@@ -61,6 +63,7 @@ func main() {
 
 	// View handlers
 	setupViewExercisesHandler(router, exerciseViewService)
+	setupViewExerciseDefaultHandler(router, exerciseDefaultViewSerivce)
 	setupViewWorkoutHandler(router, workoutViewService)
 	setupViewLoginHandler(router, loginViewService)
 
@@ -107,8 +110,17 @@ func setupExerciseViewService(exercisesService is.IExercisesService, workoutServ
 	return exerciseViewService
 }
 
+func setupExerciseDefaultViewService(exercisesService is.IExercisesService, exerciseViewService vs.IExerciseViewService) vs.IExerciseDefaultViewService {
+	exerciseDefaultViewService := vs.NewExerciseDefaultViewService(exercisesService, exerciseViewService)
+	return exerciseDefaultViewService
+}
+
 func setupViewExercisesHandler(router *chi.Mux, exerciseViewService vs.IExerciseViewService) {
 	vh.NewExerciseViewHandler(exerciseViewService).Register(router)
+}
+
+func setupViewExerciseDefaultHandler(router *chi.Mux, exerciseDefaultViewService vs.IExerciseDefaultViewService) {
+	vh.NewExerciseDefaultViewHandler(exerciseDefaultViewService).Register(router)
 }
 
 func setupLoginViewService(userService is.IUserService) vs.ILoginViewService {

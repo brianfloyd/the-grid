@@ -1,0 +1,13 @@
+package page
+
+import (
+	m "github.com/brianfloyd/the-grid/view/model"
+    "github.com/brianfloyd/the-grid/view/template/component"
+)
+
+templ ExerciseDefaultsPage(ed []m.ExerciseDefaultView, exerciseGroups []m.ExerciseGroupViewResponse) {
+    @component.PageWrapperComponent([]string{}) {
+        @component.ExerciseGroupsComponent(exerciseGroups)
+        @component.ExerciseDefaultsComponent(ed)
+    }
+}

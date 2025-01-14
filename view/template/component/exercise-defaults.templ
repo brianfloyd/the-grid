@@ -1,0 +1,40 @@
+package component
+
+import (
+    m "github.com/brianfloyd/the-grid/view/model"
+)
+
+templ exerciseDefaultEditComponent(exerciseDefault m.ExerciseDefaultEditView) {
+
+}
+
+templ exerciseDefaultComponent(exerciseDefault m.ExerciseDefaultView) {
+    <td>{exerciseDefault.Name}</td>
+    <td class="text-center">{exerciseDefault.Weight}</td>
+    <td class="text-center">{exerciseDefault.Reps}</td>
+    <td>
+        <button class="btn btn-lg text-4xl h-24 w-32 mx-auto block">{exerciseDefault.EditButtonText}</button>
+    </td>
+}
+
+templ ExerciseDefaultsComponent(exerciseDefaults []m.ExerciseDefaultView) {
+    <div class="overflow-x-auto mx-8">
+        <table class="table table-pin-rows table-auto text-4xl">
+            <thead>
+                <tr>
+                    <th class="text-4xl">Exercise</th>
+                    <th class="text-4xl text-center">Weight</th>
+                    <th class="text-4xl text-center">Reps</th>
+                    <th class="text-4xl text-center"></th>
+                </tr>
+            </thead>
+            <tbody>
+                for _, ed := range exerciseDefaults {
+                    <tr>
+                        @exerciseDefaultComponent(ed)
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
