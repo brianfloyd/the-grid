@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -24,4 +25,13 @@ func renderErrorResponse(w http.ResponseWriter, r *http.Request, errorCode rm.Er
 func renderResponse(w http.ResponseWriter, r *http.Request, response interface{}, status int) {
 	render.Status(r, status)
 	render.JSON(w, r, response)
+}
+
+func decodeBody(w http.ResponseWriter, r *http.Request, body interface{}, e string) bool {
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		renderErrorResponse(w, r, rm.BadRequest, fmt.Sprintf("Could not convert given body to a %s request.", e), err)
+		return false
+	}
+	return true
 }

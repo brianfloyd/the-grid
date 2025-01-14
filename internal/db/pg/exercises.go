@@ -56,3 +56,37 @@ func (e *ExercisesRepository) ListForGroup(ctx context.Context, group string) ([
 	}
 	return exercises, nil
 }
+
+func (e *ExercisesRepository) SelectExerciseDefaultById(ctx context.Context, id string) (m.ExerciseDefault, error) {
+	return e.q.SelectExerciseDefaultById(ctx, id)
+}
+
+func (e *ExercisesRepository) SelectExerciseDefault(ctx context.Context, userId string, exerciseId string) (m.ExerciseDefault, error) {
+	return e.q.SelectExerciseDefault(ctx, userId, exerciseId)
+}
+
+func (e *ExercisesRepository) SelectAllExerciseDefaultsForUser(ctx context.Context, userId string) ([]m.ExerciseDefault, error) {
+	return e.q.SelectAllExerciseDefaultsForUser(ctx, userId)
+}
+
+func (e *ExercisesRepository) SelectAllExerciseDefaults(ctx context.Context) ([]m.ExerciseDefault, error) {
+	return e.q.SelectAllExerciseDefaults(ctx)
+}
+
+func (e *ExercisesRepository) InsertExerciseDefault(ctx context.Context, defaultExercise m.ExerciseDefault) (m.ExerciseDefault, error) {
+	return e.q.InsertExerciseDefault(ctx, InsertDefaultExerciseParams{
+		id:         uuid.NewString(),
+		userId:     defaultExercise.UserId,
+		exerciseId: defaultExercise.ExerciseId,
+		weight:     defaultExercise.Weight,
+		reps:       defaultExercise.Reps,
+	})
+}
+
+func (e *ExercisesRepository) UpdateExerciseDefault(ctx context.Context, defaultExercise m.ExerciseDefault) (m.ExerciseDefault, error) {
+	return e.q.UpdateExerciseDefault(ctx, UpdateDefaultExerciseParams{
+		id:     defaultExercise.Id,
+		weight: defaultExercise.Weight,
+		reps:   defaultExercise.Reps,
+	})
+}

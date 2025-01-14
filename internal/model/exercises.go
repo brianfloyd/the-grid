@@ -8,6 +8,14 @@ type Exercise struct {
 	Group ExerciseGroup
 }
 
+type ExerciseDefault struct {
+	Id         string
+	ExerciseId string
+	UserId     string
+	Weight     uint64
+	Reps       uint64
+}
+
 type GenericExerciseError struct {
 	Message string
 }
@@ -20,6 +28,18 @@ type ExerciseExistsError struct {
 	Message string
 }
 
+type ExerciseDefaultValidationError struct {
+	Message string
+}
+
+type ExerciseDefaultExistsError struct {
+	Message string
+}
+
+type ExerciseDefaultNotFoundError struct {
+	Message string
+}
+
 func (e *GenericExerciseError) Error() string {
 	return e.Message
 }
@@ -29,5 +49,17 @@ func (e *ExerciseValidationError) Error() string {
 }
 
 func (e *ExerciseExistsError) Error() string {
+	return e.Message
+}
+
+func (e *ExerciseDefaultValidationError) Error() string {
+	return e.Message
+}
+
+func (e *ExerciseDefaultExistsError) Error() string {
+	return e.Message
+}
+
+func (e *ExerciseDefaultNotFoundError) Error() string {
 	return e.Message
 }
